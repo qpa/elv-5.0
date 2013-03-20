@@ -1,0 +1,17 @@
+01=1 Ápolást indokló fődiagnózis alapjául szolgáló betegség
+02=2 Áthelyezést indokló diagnózis
+03=3 Ápolást indokló fődiagnózis
+04=4 Szövődmény, az ápolást indokló fődiagnózis miatt
+05=5 Kísérő betegség
+06=6 Halált közvetlenül előidéző betegség vagy állapot a klinikus szerint
+07=7 Kórbonctani alapbetegség (a halál alapjául szolgáló betegség vagy állapot)
+08=8 Halált közvetlenül előidéző betegség vagy állapot a kórbonctan szerint
+09=9 Kórbonctani kísérő betegségek vagy állapotok
+10=A Megelőző ok a kórbonctan szerint
+11=B Halál alapjául szolgáló betegség a klinikius szerint
+12=C Nosocomiális eredetű szövődmény a kezelés következtében
+13=D Egyéb szövődmény a kezelés következtében
+14=E Sérülések és mérgezések külső okai
+15=K Kiegészítő kód a "*" jelű BNO kódokkal a "3" típusú diagnózisra
+16=M Pathológiai vizsgálatok eredményének morphológiai kódja
+17=V Az egészségi állapotra ható és az egészségügyi szolgálat igénybevételét befolyásoló tényezők
