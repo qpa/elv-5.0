@@ -24,12 +24,12 @@ public class MortalitySplitter {
   private static final Logger LOG = LoggerFactory.getLogger(MortalitySplitter.class);
   // Warning!!! The indices of the data columns may VARY by YEAR!
   // Variables: change by YEAR!!! All indices start with 0!!!
-  private static final int currentYear = 2007;
-  private static final String inputDirName = "f:/ELV/data/mortality/mortality_" + currentYear;
+  private static final int currentYear = 2011;
+  private static final String inputDirName = "e:/ELV/data/mortality/mortality_" + currentYear;
   private static final String inputFileEnding = "1.xls";
   private static final int sheetIdx = 1;
   private static final int firstDataRowIdx = 4;
-  private static final String outputFileName = "f:/ELV/data/mortality/" + currentYear + ".csv";
+  private static final String outputFileName = "e:/ELV/data/mortality/" + currentYear + ".csv";
 
   public static void main(String[] args) throws Exception {
     final TPath input = new TPath(inputDirName);
