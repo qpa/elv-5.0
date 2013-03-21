@@ -12,7 +12,7 @@ import java.util.List;
 public abstract class Person implements Name, Serializable {
   private static final long serialVersionUID = 1L;
 
-  public enum Attrbute {
+  public enum Attribute {
     NAME, DESCRIPTION, PASSWORD;
   }
   private Track track;

@@ -2,6 +2,7 @@ package elv.common;
 
 import elv.common.io.Track;
 import elv.common.io.Tracks;
+import elv.common.params.Param;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -13,10 +14,6 @@ import java.util.Objects;
 public abstract class Analysis implements Name {
   private static final long serialVersionUID = 1L;
 
-  public enum Dir {
-    prop, proc;
-  }
-
   public enum Attribute {
     TYPE, NAME, DESCRIPTION, STATE, SCHEDULED_DATE;
   }
@@ -24,13 +21,15 @@ public abstract class Analysis implements Name {
   public enum State {
     DEFINED, SCHEDULED, STARTED, STOPPED, FINISHED, FAILED;
   }
+  public static String PARAM_FILE = "param" + Tracks.YML;
+  public static String RESULT_FILE = "results-db";
   private Track track;
-  private final List<String> props;
+  private final List<Param> params;
   private final List<String> steps;
 
-  private Analysis(Track track, List<String> props, List<String> steps) {
+  private Analysis(Track track, List<Param> params, List<String> steps) {
     this.track = track;
-    this.props = props;
+    this.params = params;
     this.steps = steps;
   }
 
@@ -47,16 +46,16 @@ public abstract class Analysis implements Name {
     return Tracks.create(track, Tracks.file(Analysis.class));
   }
 
-  public final Track getPropTrack() {
-    return Tracks.create(track, Dir.prop.name());
+  public final Track getParamTrack() {
+    return Tracks.create(track, PARAM_FILE);
   }
 
   public final Track getProcTrack() {
-    return Tracks.create(track, Dir.proc.name());
+    return Tracks.create(track, RESULT_FILE);
   }
 
-  public final List<String> getProps() {
-    return props;
+  public final List<Param> getParams() {
+    return params;
   }
 
   public final List<String> getSteps() {
@@ -98,7 +97,7 @@ public abstract class Analysis implements Name {
   public static final class MortalitySelection extends Analysis {
     public MortalitySelection(Track track) {
       super(track,
-        Collections.unmodifiableList(Arrays.asList("YearInterval", "AgeInterval", "BaseTerritory")),
+        Collections.unmodifiableList(Arrays.asList(Param.yearIntervals, Param.ageIntervals, Param.baseRanges)),
         Collections.unmodifiableList(Arrays.asList("MortalitySelection")));
     }
   }
@@ -106,7 +105,7 @@ public abstract class Analysis implements Name {
   public static final class PopulationPreparation extends Analysis {
     public PopulationPreparation(Track track) {
       super(track,
-        Collections.unmodifiableList(Arrays.asList("YearIntervalList", "AgeIntervalList", "BaseTerritory")),
+        Collections.unmodifiableList(Arrays.asList(Param.yearIntervals, Param.ageIntervals, Param.baseRanges)),
         Collections.unmodifiableList(Arrays.asList("PopulationPreparation")));
     }
   }
@@ -114,7 +113,8 @@ public abstract class Analysis implements Name {
   public static final class MortalityPreparation extends Analysis {
     public MortalityPreparation(Track track) {
       super(track,
-        Collections.unmodifiableList(Arrays.asList("Gender", "Resolution", "YearIntervals", "AgeIntervals", "BaseTerritories", "DiseaseDiagnoses", "MortalityDiagnoses")),
+        Collections.unmodifiableList(Arrays.asList(Param.genders, Param.resolution, Param.yearIntervals, Param.ageIntervals, Param.baseRanges,
+          Param.diseaseDiagnoses, Param.mortalityDiagnoses)),
         Collections.unmodifiableList(Arrays.asList("MortalityPreparation")));
     }
   }
@@ -122,7 +122,8 @@ public abstract class Analysis implements Name {
   public static final class MortalityStandardization extends Analysis {
     public MortalityStandardization(Track track) {
       super(track,
-        Collections.unmodifiableList(Arrays.asList("YearIntervalList", "AgeIntervalList", "BaseTerritory", "BenchmarkTerritory", "Diseases", "Mortalities")),
+        Collections.unmodifiableList(Arrays.asList(Param.genders, Param.resolution, Param.yearIntervals, Param.benchmarkYear, Param.ageIntervals, Param.baseRanges,
+          Param.benchmarkRanges, Param.diseaseDiagnoses, Param.mortalityDiagnoses, Param.standardizationMode)),
         Collections.unmodifiableList(Arrays.asList("MortalityStandardPreparation", "Standardization")));
     }
   }
@@ -130,7 +131,8 @@ public abstract class Analysis implements Name {
   public static final class MortalitySmoothing extends Analysis {
     public MortalitySmoothing(Track track) {
       super(track,
-        Collections.unmodifiableList(Arrays.asList("YearIntervalList", "AgeIntervalList", "BaseTerritory", "BenchmarkTerritory", "Diseases", "Mortalities")),
+        Collections.unmodifiableList(Arrays.asList(Param.genders, Param.resolution, Param.yearIntervals, Param.benchmarkYear, Param.ageIntervals, Param.baseRanges,
+          Param.benchmarkRanges, Param.diseaseDiagnoses, Param.mortalityDiagnoses, Param.smoothingMode, Param.smoothingCategory)),
         Collections.unmodifiableList(Arrays.asList("MortalityStandardPreparation", "Standardization", "Smoothing")));
     }
   }

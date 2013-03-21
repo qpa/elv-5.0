@@ -1,8 +1,8 @@
 package elv.common.io;
 
-import elv.common.props.Node;
-import elv.common.props.Diagnosis;
-import elv.common.props.DiagnosisNode;
+import elv.common.params.Node;
+import elv.common.params.Diagnosis;
+import elv.common.params.DiagnosisNode;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,11 +11,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Property loaders
+ * Parameter loaders
  */
-public class Props {
+public class Params {
 
-  private Props() {
+  private Params() {
   }
 
   public static DiagnosisNode loadAllDiseaseDiagnoses() throws IOException {
@@ -44,7 +44,7 @@ public class Props {
   
   private static DiagnosisNode loadAllDiagnoses(String resourceName) throws IOException {
     DiagnosisNode rootNode = new DiagnosisNode(Diagnosis.ROOT);
-    try(BufferedReader fileReader = new BufferedReader(new InputStreamReader(Props.class.getResource(resourceName).openStream(), StandardCharsets.UTF_8))) {
+    try(BufferedReader fileReader = new BufferedReader(new InputStreamReader(Params.class.getResource(resourceName).openStream(), StandardCharsets.UTF_8))) {
       final Map<Node, Integer> depthMap = new HashMap<>();
       depthMap.put(rootNode, 0);
       DiagnosisNode prevNode = rootNode;

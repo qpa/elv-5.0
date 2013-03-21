@@ -10,7 +10,7 @@ public abstract class Catalog implements Name {
   private static final long serialVersionUID = 1L;
   public static String ARCHIVE_EXTENSION = ".zip";
 
-  public enum Attrbute {
+  public enum Attribute {
     NAME, DESCRIPTION;
   }
   private Track track;

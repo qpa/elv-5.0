@@ -1,9 +1,9 @@
-package elv.common.props;
+package elv.common.params;
 
 /**
- * Class for properties.
+ * Class for parameters.
  */
-public enum Prop {
+public enum Param {
   locale,
   genders, resolution, benchmarkYear, yearWindows, yearIntervals, ageIntervals,
   baseRanges, benchmarkRanges, diseaseDiagnoses, mortalityDiagnoses,

@@ -1,7 +1,7 @@
 package elv.server.io;
 
-import elv.common.props.Diagnosis;
-import elv.common.props.Interval;
+import elv.common.params.Diagnosis;
+import elv.common.params.Interval;
 import java.util.regex.Pattern;
 import org.yaml.snakeyaml.constructor.AbstractConstruct;
 import org.yaml.snakeyaml.nodes.Node;

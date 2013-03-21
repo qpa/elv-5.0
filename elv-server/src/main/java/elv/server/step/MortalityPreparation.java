@@ -1,13 +1,13 @@
 package elv.server.step;
 
-import elv.common.props.Diagnosis;
-import elv.common.props.Gender;
-import elv.common.props.Interval;
-import elv.common.props.Node;
-import elv.common.props.Prop;
-import elv.common.props.Resolution;
-import elv.common.props.Territory;
-import elv.common.props.TerritoryNode;
+import elv.common.params.Diagnosis;
+import elv.common.params.Gender;
+import elv.common.params.Interval;
+import elv.common.params.Node;
+import elv.common.params.Param;
+import elv.common.params.Resolution;
+import elv.common.params.Territory;
+import elv.common.params.TerritoryNode;
 import elv.common.step.Progress;
 import elv.common.step.Progresses;
 import elv.server.proc.Process;
@@ -37,17 +37,17 @@ public class MortalityPreparation implements Step {
 
     Map<Key, Value> stepResults = process.getResults().get(this.getClass().getSimpleName());
 
-    List<Gender> genders = (List<Gender>)process.getProps().get(Prop.genders);
+    List<Gender> genders = (List<Gender>)process.getParams().get(Param.genders);
 
-    Resolution resolution = (Resolution)process.getProps().get(Prop.resolution);
+    Resolution resolution = (Resolution)process.getParams().get(Param.resolution);
 
-    List<Diagnosis> diseaseDiagnoses = (List<Diagnosis>)process.getProps().get(Prop.diseaseDiagnoses);
-    List<Diagnosis> mortalityDiagnoses = (List<Diagnosis>)process.getProps().get(Prop.mortalityDiagnoses);
+    List<Diagnosis> diseaseDiagnoses = (List<Diagnosis>)process.getParams().get(Param.diseaseDiagnoses);
+    List<Diagnosis> mortalityDiagnoses = (List<Diagnosis>)process.getParams().get(Param.mortalityDiagnoses);
     String diagnosesClause = Sqls.createClause(diseaseDiagnoses, mortalityDiagnoses);
 
-    List<Interval> yearIntervals = (List<Interval>)process.getProps().get(Prop.yearIntervals);
-    List<Interval> ageIntervals = (List<Interval>)process.getProps().get(Prop.ageIntervals);
-    List<TerritoryNode> rangeNodes = (List<TerritoryNode>)process.getProps().get(Prop.baseRanges);
+    List<Interval> yearIntervals = (List<Interval>)process.getParams().get(Param.yearIntervals);
+    List<Interval> ageIntervals = (List<Interval>)process.getParams().get(Param.ageIntervals);
+    List<TerritoryNode> rangeNodes = (List<TerritoryNode>)process.getParams().get(Param.baseRanges);
 
     Map<String, Object> arguments = new HashMap<>();
     arguments.put(RangeCasesCounter.RESOLUTION, resolution);
@@ -61,13 +61,13 @@ public class MortalityPreparation implements Step {
       int years = resolution == Resolution.YEAR_INTERVALY ? 1 : iYearInterval.to - iYearInterval.from + 1;
       progresses.push(new Progress("Years", 0, years));
       for(int yearCount = 0; yearCount < years; yearCount++) {
-        int iYear = iYearInterval.from + yearCount;
+        Integer iYear = resolution == Resolution.YEAR_INTERVALY ? null : iYearInterval.from + yearCount;
         arguments.put(RangeCasesCounter.YEAR, iYear);
 
         int months = resolution == Resolution.MONTHLY ? 12 : 1;
         progresses.push(new Progress("Months", 0, months));
         for(int monthCount = 0; monthCount < months; monthCount++) {
-          int iMonth = resolution == Resolution.MONTHLY ? monthCount + 1 : monthCount;
+          Integer iMonth = resolution == Resolution.MONTHLY ? monthCount + 1 : monthCount;
           arguments.put(RangeCasesCounter.MONTH, iMonth);
 
           progresses.push(new Progress("Genders", 0, genders.size()));
@@ -92,6 +92,7 @@ public class MortalityPreparation implements Step {
                   int observedCases = Process.EXECUTOR.invoke(new RangeCasesCounter(iRangeNode.getChildren(), arguments));
                   value = new Value.Builder().setObservedCases(observedCases).build();
                   stepResults.put(key, value);
+                  Process.LOG.info(key + ":" + value);
                 }
                 progresses.setPeekValue(rangeCount + 1);
               }
@@ -137,8 +138,8 @@ public class MortalityPreparation implements Step {
         Territory settlement = ((TerritoryNode)settlements.get(0)).territory;
         Resolution resolution = (Resolution)arguments.get(RESOLUTION);
         Interval yearInterval = (Interval)arguments.get(YEAR_INTERVAL);
-        int year = (Integer)arguments.get(YEAR);
-        int month = (Integer)arguments.get(MONTH);
+        Integer year = (Integer)arguments.get(YEAR);
+        Integer month = (Integer)arguments.get(MONTH);
         Gender gender = (Gender)arguments.get(GENDER);
         Interval ageInterval = (Interval)arguments.get(AGE_INTERVAL);
         String diagnosesClause = (String)arguments.get(DIAGNOSES_CLAUSE);

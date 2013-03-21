@@ -1,8 +1,8 @@
 package elv.server;
 
 import elv.common.App;
-import elv.common.props.DiagnosisNode;
-import elv.common.io.Props;
+import elv.common.params.DiagnosisNode;
+import elv.common.io.Params;
 import elv.server.proc.Processes;
 import elv.server.proc.Signaller;
 import java.io.IOException;
@@ -41,7 +41,7 @@ public class Config {
   }
 
   public static DataSource dataBase(App app) {
-    final String url = "jdbc:h2:~/.elv/5.0/db"; //app.props.get(App.Prop.DB_URL.key);
+    final String url = "jdbc:h2:~/.elv/5.0/data-db"; //app.props.get(App.Prop.DB_URL.key);
     final String user = "elv"; //app.props.get(App.Prop.DB_USER.key);
     final String password = "elv"; //app.props.get(App.Prop.DB_PASSWORD.key);
     return JdbcConnectionPool.create(url, user, password);
@@ -64,7 +64,7 @@ public class Config {
   }
 
   public DiagnosisNode allDiseaseDiagnoses() throws IOException {
-    return Props.loadAllDiseaseDiagnoses();
+    return Params.loadAllDiseaseDiagnoses();
   }
 
   public static void main(String[] args) throws InterruptedException, ExecutionException, IOException {

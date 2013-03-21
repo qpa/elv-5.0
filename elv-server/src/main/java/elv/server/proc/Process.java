@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import elv.common.Analysis;
 import elv.common.Attribute;
 import elv.common.io.Tracks;
-import elv.common.props.Prop;
+import elv.common.params.Param;
 import elv.common.step.Progresses;
 import elv.server.Config;
 import elv.server.io.Files;
@@ -33,7 +33,7 @@ public final class Process implements Runnable {
   private Analysis analysis;
   private Attribute analysisAttribute;
   private DB resultDb;
-  private Map<Prop, Object> props;
+  private Map<Param, Object> params;
   private List<Step> steps;
   private Progresses progresses;
   private Map<String, Map<Key, Value>> results;
@@ -51,11 +51,11 @@ public final class Process implements Runnable {
     return analysisAttribute;
   }
 
-  public Map<Prop, Object> getProps() {
-    if(props == null) {
-      props = getResultDb().getHashMap("props");
+  public Map<Param, Object> getParams() {
+    if(params == null) {
+      params = getResultDb().getHashMap("params");
     }
-    return props;
+    return params;
   }
 
   public List<Step> getSteps() {
@@ -92,7 +92,7 @@ public final class Process implements Runnable {
       analysisAttribute.put(Analysis.Attribute.STATE.name(), Analysis.State.STARTED);
       Files.store(analysisAttribute, analysis.getAttributeTrack());
 
-      getProps();
+      getParams();
       getResults();
 
       steps = loadSteps();
@@ -133,7 +133,7 @@ public final class Process implements Runnable {
     Step[] stepArray = new Step[analysis.getSteps().size()];
     for(int idx = 0; idx < stepArray.length; idx++) {
       Class<Step> stepClass = (Class<Step>)Class.forName(analysis.getSteps().get(idx));
-      stepArray[idx] = Files.load(stepClass, Tracks.create(analysis.getPropTrack(), analysis.getSteps().get(idx)));
+      stepArray[idx] = Files.load(stepClass, Tracks.create(analysis.getParamTrack(), analysis.getSteps().get(idx)));
     }
     return ImmutableList.copyOf(stepArray);
   }

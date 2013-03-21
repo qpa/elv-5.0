@@ -1,11 +1,11 @@
 package elv.server.result;
 
 import com.google.common.base.Joiner;
-import elv.common.props.Diagnosis;
-import elv.common.props.Gender;
-import elv.common.props.Interval;
-import elv.common.props.Resolution;
-import elv.common.props.Territory;
+import elv.common.params.Diagnosis;
+import elv.common.params.Gender;
+import elv.common.params.Interval;
+import elv.common.params.Resolution;
+import elv.common.params.Territory;
 import java.util.ArrayList;
 import java.util.List;
 

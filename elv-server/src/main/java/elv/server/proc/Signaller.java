@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,7 +112,7 @@ public class Signaller {
             // Register creted directory and its sub-directories
             if(kind == ENTRY_CREATE) {
               try {
-                if(Files.isDirectory(noticedPath, NOFOLLOW_LINKS) && !noticedName.toString().contains(Analysis.Dir.proc.name())) {
+                if(Files.isDirectory(noticedPath, NOFOLLOW_LINKS)) { // && !noticedName.toString().contains(Analysis.PROC_DIR)) {
                   register(noticedPath);
                 }
               } catch(IOException ex) {

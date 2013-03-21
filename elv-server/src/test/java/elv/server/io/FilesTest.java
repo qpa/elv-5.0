@@ -1,9 +1,9 @@
 package elv.server.io;
 
-import elv.common.props.Diagnosis;
-import elv.common.props.DiagnosisNode;
-import elv.common.props.Interval;
-import elv.common.io.Props;
+import elv.common.params.Diagnosis;
+import elv.common.params.DiagnosisNode;
+import elv.common.params.Interval;
+import elv.common.io.Params;
 import elv.common.io.Track;
 import elv.common.io.Tracks;
 import java.io.IOException;
@@ -153,7 +153,7 @@ public class FilesTest {
   @Test
   public void testStoreDiagnoses() throws UnsupportedEncodingException, IOException {
     // GIVEN
-    final DiagnosisNode diseaseRoot = Props.loadAllDiseaseDiagnoses();
+    final DiagnosisNode diseaseRoot = Params.loadAllDiseaseDiagnoses();
     final List<Diagnosis> diagnoses = new LinkedList<>();
     diagnoses.add(((DiagnosisNode)diseaseRoot.getChildren().get(0).getChildren().get(0)).getDiagnosis());
     diagnoses.add(((DiagnosisNode)diseaseRoot.getChildren().get(0).getChildren().get(1)).getDiagnosis());

@@ -1,4 +1,4 @@
-package elv.common.props;
+package elv.common.params;
 
 /**
  * Gender.

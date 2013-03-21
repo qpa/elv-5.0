@@ -14,7 +14,7 @@ public final class App implements Serializable {
     VERSION("app.version", "5.0"),
     PROC_DIR("app.proc.dir", System.getProperty("user.home") + "/.elv-" + VERSION.def),
     PROC_MAXCOUNT("app.proc.maxcount", "5"),
-    DB_DRIVER("app.db.driver", "org.h2.Driver"), DB_URL("app.db.url", "jdbc:h2:" + PROC_DIR.def + "/db/elv"),
+    DB_DRIVER("app.db.driver", "org.h2.Driver"), DB_URL("app.db.url", "jdbc:h2:" + PROC_DIR.def + "/data-db"),
     DB_USER("app.db.user", "elv"), DB_PASSWORD("app.db.password", "elv");
     
     public final String key;

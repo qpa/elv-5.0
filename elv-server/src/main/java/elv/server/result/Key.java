@@ -1,8 +1,8 @@
 package elv.server.result;
 
-import elv.common.props.Interval;
-import elv.common.props.Territory;
-import elv.common.props.Gender;
+import elv.common.params.Interval;
+import elv.common.params.Territory;
+import elv.common.params.Gender;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -72,7 +72,7 @@ public class Key implements Serializable {
     private Gender gender = null;
     private Territory territory = null;
 
-    public Builder setYearWindow(int yearWindow) {
+    public Builder setYearWindow(Integer yearWindow) {
       this.yearWindow = yearWindow;
       return this;
     }
@@ -82,7 +82,7 @@ public class Key implements Serializable {
       return this;
     }
 
-    public Builder setYear(int year) {
+    public Builder setYear(Integer year) {
       this.year = year;
       return this;
     }
