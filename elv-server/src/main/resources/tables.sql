@@ -16,7 +16,10 @@ CREATE TABLE mortality(
 CREATE INDEX mortality ON mortality(year, gender, age, settlement, month);
 
 -- Load:
-INSERT INTO mortality SELECT * FROM csvread('F:/ELV/data/mortality.csv');
+INSERT INTO mortality SELECT * FROM CSVREAD('F:/ELV/data/mortality.csv');
+
+-- Unload:
+CALL CSVWRITE('F:/ELV/data/mortality.csv', 'SELECT * FROM mortality', 'writeColumnHeader=false fieldDelimiter=');
 
 ---- POPULATION
 -- Create:
@@ -31,4 +34,7 @@ CREATE TABLE population(
 CREATE INDEX population ON population(year, gender, age, settlement);
 
 -- Load:
-INSERT INTO population SELECT * FROM csvread('F:/ELV/data/population.csv');
+INSERT INTO population SELECT * FROM CSVREAD('F:/ELV/data/population.csv');
+
+-- Unload:
+CALL CSVWRITE('F:/ELV/data/population.csv', 'SELECT * FROM population', 'writeColumnHeader=false fieldDelimiter=');
