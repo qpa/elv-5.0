@@ -22,15 +22,28 @@ import org.slf4j.LoggerFactory;
  */
 public class MortalitySplitter {
   private static final Logger LOG = LoggerFactory.getLogger(MortalitySplitter.class);
+  
   // Warning!!! The indices of the data columns may VARY by YEAR!
-  // Variables: change by YEAR!!! All indices start with 0!!!
+  
+  // Variables: change by YEAR!!!
   private static final int currentYear = 2011;
   private static final String inputDirName = "e:/ELV/data/mortality/mortality_" + currentYear;
   private static final String inputFileEnding = "1.xls";
-  private static final int sheetIdx = 1;
-  private static final int firstDataRowIdx = 4;
   private static final String outputFileName = "e:/ELV/data/mortality/" + currentYear + ".csv";
 
+  // Indices: all indices start with 0 and may VARY by YEAR!!!
+  private static final int sheetIdx = 1;
+  private static final int firstDataRowIdx = 4;
+  
+  private static final int deathMonthIdx = 0;
+  private static final int permanentResidenceIdx = 3;
+  private static final int effectiveResidenceIdx = 4;
+  private static final int genderIdx = 5;
+  private static final int birthDateIdx = 6;
+  private static final int diagnoserIdx = 7;
+  private static final int medicalTreatmentIdx = 9;
+  private static final int diagnosis_1Idx = 10;
+  
   public static void main(String[] args) throws Exception {
     final TPath input = new TPath(inputDirName);
     final TPath output = new TPath(outputFileName);
@@ -70,13 +83,13 @@ public class MortalitySplitter {
             LOG.info("SPLIT... sheet <{}>, file {}", sheet.getName(), file.toString());
             for(rowIdx = firstDataRowIdx; rowIdx < sheet.getRows(); rowIdx++) {
               Cell[] cells = sheet.getRow(rowIdx);
-              int deathMonth = parseInt(cells[0].getContents(), 0);
-              int permanentResidence = parseInt(cells[3].getContents(), 0);
-              int effectiveResidence = parseInt(cells[4].getContents(), 0);
+              int deathMonth = parseInt(cells[deathMonthIdx].getContents(), 0);
+              int permanentResidence = parseInt(cells[permanentResidenceIdx].getContents(), 0);
+              int effectiveResidence = parseInt(cells[effectiveResidenceIdx].getContents(), 0);
               effectiveResidence = effectiveResidence == 0 ? permanentResidence : effectiveResidence;
-              int gender = parseInt(cells[5].getContents());
+              int gender = parseInt(cells[genderIdx].getContents());
 
-              String birthDate = cells[6].getContents();
+              String birthDate = cells[birthDateIdx].getContents();
               // Correct birthDate if needed
               int birthDateLength = 8;
               for(int i = birthDate.length(); i < birthDateLength; i++) {
@@ -86,10 +99,10 @@ public class MortalitySplitter {
               int birthMonth = parseInt(birthDate.substring(4, 6));
               int birthDay = parseInt(birthDate.substring(6, 8));
 
-              int diagnoser = parseInt(cells[7].getContents(), 0);
-              int medicalTreatment = parseInt(cells[9].getContents(), 0);
+              int diagnoser = parseInt(cells[diagnoserIdx].getContents(), 0);
+              int medicalTreatment = parseInt(cells[medicalTreatmentIdx].getContents(), 0);
 
-              String diagnosis_1 = cells[10].getContents();
+              String diagnosis_1 = cells[diagnosis_1Idx].getContents();
               int bnoCodeLength = 5;
               for(int i = diagnosis_1.length(); i < bnoCodeLength; i++) {
                 diagnosis_1 += "_";

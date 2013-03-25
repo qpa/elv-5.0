@@ -19,14 +19,17 @@ public class PopulationSplitter {
   
   // Warning!!! The indices of the data columns may VARY by YEAR!
   
-  // Variables: change by YEAR!!! All indices start with 0!!!
+  // Variables: change by YEAR!!!
   private static final int currentYear = 2011;
   private static final String inputFileName = "e:/ELV/data/population/OKI_2012_ALL.ZIP/OKI_2012_ALL.XLS";
+  private static final String outputFileName = "e:/ELV/data/population/" + currentYear + ".csv";
+  
+  // Indices: all indices start with 0 and may VARY by YEAR!!!
   private static final int maleSheetIdx = 1;
   private static final int femaleSheetIdx = 2;
   private static final int firstDataRowIdx = 2;
+  private static final int settlementIdx = 1;
   private static final int firstAgeColumnIdx = 10;
-  private static final String outputFileName = "e:/ELV/data/population/" + currentYear + ".csv";
 
   /**
    * @param args the command line arguments
@@ -49,7 +52,8 @@ public class PopulationSplitter {
             LOG.info("SPLIT... sheet <{}>", sheet.getName());
             for(rowIdx = firstDataRowIdx; rowIdx < sheet.getRows(); rowIdx++) {
               final Cell[] cells = sheet.getRow(rowIdx);
-              final int settlement = parseInt(cells[1].getContents(), 0) / 10;
+              int settlement = parseInt(cells[settlementIdx].getContents(), 0) / 10;
+              settlement = settlement == 9999 ? 0 : settlement;
               for(int i = firstAgeColumnIdx; i < cells.length; i++) {
                 final int ageCount = parseInt(cells[i].getContents().replaceAll("\\D", ""));
                 outputWriter.println(currentYear + "," + settlement + "," + genderSheet.getKey() + "," + (i - firstAgeColumnIdx) + "," + ageCount);
