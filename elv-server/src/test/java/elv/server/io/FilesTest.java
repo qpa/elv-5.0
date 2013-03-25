@@ -3,7 +3,7 @@ package elv.server.io;
 import elv.common.params.Diagnosis;
 import elv.common.params.DiagnosisNode;
 import elv.common.params.Interval;
-import elv.common.io.Params;
+import elv.common.params.Params;
 import elv.common.io.Track;
 import elv.common.io.Tracks;
 import java.io.IOException;

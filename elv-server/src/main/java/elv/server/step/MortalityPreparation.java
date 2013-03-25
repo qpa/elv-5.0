@@ -10,6 +10,7 @@ import elv.common.params.Territory;
 import elv.common.params.TerritoryNode;
 import elv.common.step.Progress;
 import elv.common.step.Progresses;
+import elv.server.proc.Params;
 import elv.server.proc.Process;
 import elv.server.result.Key;
 import elv.server.result.Sqls;
@@ -37,17 +38,12 @@ public class MortalityPreparation implements Step {
 
     Map<Key, Value> stepResults = process.getResults().get(this.getClass().getSimpleName());
 
-    List<Gender> genders = (List<Gender>)process.getParams().get(Param.genders);
-
-    Resolution resolution = (Resolution)process.getParams().get(Param.resolution);
-
-    List<Diagnosis> diseaseDiagnoses = (List<Diagnosis>)process.getParams().get(Param.diseaseDiagnoses);
-    List<Diagnosis> mortalityDiagnoses = (List<Diagnosis>)process.getParams().get(Param.mortalityDiagnoses);
-    String diagnosesClause = Sqls.createClause(diseaseDiagnoses, mortalityDiagnoses);
-
-    List<Interval> yearIntervals = (List<Interval>)process.getParams().get(Param.yearIntervals);
-    List<Interval> ageIntervals = (List<Interval>)process.getParams().get(Param.ageIntervals);
-    List<TerritoryNode> rangeNodes = (List<TerritoryNode>)process.getParams().get(Param.baseRanges);
+    List<Gender> genders = Params.getGenders(process);
+    Resolution resolution = Params.getResolution(process);
+    List<Interval> yearIntervals = Params.getYearIntervals(process);
+    List<Interval> ageIntervals = Params.getAgeIntervals(process);
+    List<TerritoryNode> baseRangeNodes = Params.getBaseRageNodes(process);
+    String diagnosesClause = Sqls.createClause(Params.getDiseaseDiagnoses(process), Params.getMortalityDiagnoses(process));
 
     Map<String, Object> arguments = new HashMap<>();
     arguments.put(RangeCasesCounter.RESOLUTION, resolution);
@@ -80,9 +76,9 @@ public class MortalityPreparation implements Step {
               Interval iAgeInterval = ageIntervals.get(ageIntervalCount);
               arguments.put(RangeCasesCounter.AGE_INTERVAL, iAgeInterval);
 
-              progresses.push(new Progress("Ranges", 0, rangeNodes.size()));
-              for(int rangeCount = 0; rangeCount < rangeNodes.size(); rangeCount++) {
-                TerritoryNode iRangeNode = rangeNodes.get(rangeCount);
+              progresses.push(new Progress("Ranges", 0, baseRangeNodes.size()));
+              for(int rangeCount = 0; rangeCount < baseRangeNodes.size(); rangeCount++) {
+                TerritoryNode iRangeNode = baseRangeNodes.get(rangeCount);
 
                 Key key = new Key.Builder().setYearInterval(iYearInterval).setYear(iYear)
                   .setMonth(iMonth).setGender(iGender).setAgeInterval(iAgeInterval)

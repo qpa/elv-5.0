@@ -2,7 +2,7 @@ package elv.server;
 
 import elv.common.App;
 import elv.common.params.DiagnosisNode;
-import elv.common.io.Params;
+import elv.common.params.Params;
 import elv.server.proc.Processes;
 import elv.server.proc.Signaller;
 import java.io.IOException;
