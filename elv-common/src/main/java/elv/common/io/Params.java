@@ -19,27 +19,27 @@ public class Params {
   }
 
   public static DiagnosisNode loadAllDiseaseDiagnoses() throws IOException {
-    return loadAllDiagnoses("/disease.prop");
+    return loadAllDiagnoses("/disease.param");
   }
   
   public static DiagnosisNode loadAllAdmissionDiagnoses() throws IOException {
-    return loadAllDiagnoses("/admission.prop");
+    return loadAllDiagnoses("/admission.param");
   }
   
   public static DiagnosisNode loadAllDismissalDiagnoses() throws IOException {
-    return loadAllDiagnoses("/dismissal.prop");
+    return loadAllDiagnoses("/dismissal.param");
   }
   
   public static DiagnosisNode loadAllMorbidityDiagnoses() throws IOException {
-    return loadAllDiagnoses("/morbidity.prop");
+    return loadAllDiagnoses("/morbidity.param");
   }
   
   public static DiagnosisNode loadAllMortalityDiagnoses() throws IOException {
-    return loadAllDiagnoses("/mortality.prop");
+    return loadAllDiagnoses("/mortality.param");
   }
   
   public static DiagnosisNode loadAllMorfologyDiagnoses() throws IOException {
-    return loadAllDiagnoses("/morfology.prop");
+    return loadAllDiagnoses("/morfology.param");
   }
   
   private static DiagnosisNode loadAllDiagnoses(String resourceName) throws IOException {
