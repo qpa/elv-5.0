@@ -1,10 +1,8 @@
 package elv.server.step;
 
-import elv.common.params.Diagnosis;
 import elv.common.params.Gender;
 import elv.common.params.Interval;
 import elv.common.params.Node;
-import elv.common.params.Param;
 import elv.common.params.Resolution;
 import elv.common.params.Territory;
 import elv.common.params.TerritoryNode;
