@@ -2,12 +2,9 @@ package elv.server.step;
 
 import elv.common.params.Gender;
 import elv.common.params.Interval;
-import elv.common.params.Node;
-import elv.common.params.Resolution;
+import elv.common.params.Param;
 import elv.common.params.Territory;
-import elv.common.params.TerritoryNode;
 import elv.common.step.Progress;
-import elv.common.step.Progresses;
 import elv.server.proc.Params;
 import elv.server.proc.Process;
 import elv.server.result.Key;
@@ -22,7 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
+import static java.util.concurrent.ForkJoinTask.invokeAll;
+import java.util.concurrent.RecursiveAction;
 
 /**
  * Mortality preparation for standardization.
@@ -33,122 +31,97 @@ public class MortalityStandardPreparation implements Step {
 
   @Override
   public void compute(Process process) {
-    Progresses progresses = process.getProgresses();
+    String stepName = this.getClass().getSimpleName();
+    Map<Key, Value> stepResults = process.getResults().get(stepName);
 
-    Map<Key, Value> stepResults = process.getResults().get(this.getClass().getSimpleName());
-    
+    // Get parameters
     Gender gender = Params.getGender(process);
-    Resolution resolution = Params.getResolution(process);
-    List<Interval> yearIntervals = Params.getYearIntervals(process);
+    List<Integer> years = Params.getYears(process);
     List<Interval> ageIntervals = Params.getAgeIntervals(process);
-    List<TerritoryNode> baseRangeNodes = Params.getBaseRageNodes(process);
+    List<Territory> settlements = Params.getSettlements(process);
     String diagnosesClause = Sqls.createClause(Params.getDiseaseDiagnoses(process), Params.getMortalityDiagnoses(process));
 
-    Map<String, Object> arguments = new HashMap<>();
-    arguments.put(RangeCasesCounter.GENDER, gender);
-    arguments.put(RangeCasesCounter.RESOLUTION, resolution);
-    arguments.put(RangeCasesCounter.DIAGNOSES_CLAUSE, diagnosesClause);
+    // Prepare multithreading arguments
+    Map<Param, Object> arguments = new HashMap<>();
+    arguments.put(Param.gender, gender);
+    arguments.put(Param.diagnosesClause, diagnosesClause);
 
-    progresses.push(new Progress("YearIntervals", 0, yearIntervals.size()));
-    for(int yearIntervalCount = 0; yearIntervalCount < yearIntervals.size(); yearIntervalCount++) {
-      Interval iYearInterval = yearIntervals.get(yearIntervalCount);
-      arguments.put(RangeCasesCounter.YEAR_INTERVAL, iYearInterval);
+    // Set progress
+    int maxProgressValue = years.size() * ageIntervals.size() * settlements.size();
+    Progress progress = new Progress(stepName, 0, maxProgressValue);
+    process.setProgress(progress);
 
-      int years = resolution == Resolution.YEAR_INTERVALY ? 1 : iYearInterval.to - iYearInterval.from + 1;
-      progresses.push(new Progress("Years", 0, years));
-      for(int yearCount = 0; yearCount < years; yearCount++) {
-        int iYear = iYearInterval.from + yearCount;
-        arguments.put(RangeCasesCounter.YEAR, iYear);
-
-        int months = resolution == Resolution.MONTHLY ? 12 : 1;
-        progresses.push(new Progress("Months", 0, months));
-        for(int monthCount = 0; monthCount < months; monthCount++) {
-          int iMonth = resolution == Resolution.MONTHLY ? monthCount + 1 : monthCount;
-          arguments.put(RangeCasesCounter.MONTH, iMonth);
-
-          progresses.push(new Progress("AgeIntervals", 0, ageIntervals.size()));
-          for(int ageIntervalCount = 0; ageIntervalCount < ageIntervals.size(); ageIntervalCount++) {
-            Interval iAgeInterval = ageIntervals.get(ageIntervalCount);
-            arguments.put(RangeCasesCounter.AGE_INTERVAL, iAgeInterval);
-
-            progresses.push(new Progress("Ranges", 0, baseRangeNodes.size()));
-            for(int rangeCount = 0; rangeCount < baseRangeNodes.size(); rangeCount++) {
-              TerritoryNode iRangeNode = baseRangeNodes.get(rangeCount);
-
-              Key key = new Key.Builder().setYearInterval(iYearInterval).setYear(iYear)
-                .setMonth(iMonth).setGender(gender).setAgeInterval(iAgeInterval)
-                .setRange(iRangeNode.territory).build();
-              Value value = stepResults.get(key);
-              if(value == null) {
-                int observedCases = Process.EXECUTOR.invoke(new RangeCasesCounter(iRangeNode.getChildren(), arguments));
-                value = new Value.Builder().setObservedCases(observedCases).build();
-                stepResults.put(key, value);
-              }
-              progresses.setPeekValue(rangeCount + 1);
-            }
-            progresses.pop();
-            progresses.setPeekValue(ageIntervalCount + 1);
-          }
-          progresses.pop();
-          progresses.setPeekValue(monthCount + 1);
-        }
-        progresses.pop();
-        progresses.setPeekValue(yearCount + 1);
+    for(int iYear : years) {
+      arguments.put(Param.year, iYear);
+      for(Interval iAgeInterval : ageIntervals) {
+        arguments.put(Param.ageInterval, iAgeInterval);
+        Process.EXECUTOR.invoke(new SettlementCasesCounter(progress, settlements, arguments, stepResults));
       }
-      progresses.pop();
-      progresses.setPeekValue(yearIntervalCount + 1);
     }
-    progresses.pop();
     process.getResultDb().commit();
   }
 
-  private static class RangeCasesCounter extends RecursiveTask<Integer> {
-    public static final String RESOLUTION = "resolution";
-    public static final String YEAR_INTERVAL = "yearInterval";
-    public static final String YEAR = "year";
-    public static final String MONTH = "month";
-    public static final String GENDER = "gender";
-    public static final String AGE_INTERVAL = "ageInterval";
-    public static final String DIAGNOSES_CLAUSE = "diagnosesClause";
-    final List<Node> settlements;
-    final Map<String, Object> arguments;
+  private static class SettlementCasesCounter extends RecursiveAction {
+    private final Progress progress;
+    private final List<Territory> settlements;
+    private final Map<Param, Object> arguments;
+    private final Map<Key, Value> stepResults;
 
-    public RangeCasesCounter(List<Node> settlements, Map<String, Object> arguments) {
+    public SettlementCasesCounter(Progress progress, List<Territory> settlements, Map<Param, Object> arguments, Map<Key, Value> stepResults) {
+      this.progress = progress;
       this.settlements = settlements;
       this.arguments = arguments;
+      this.stepResults = stepResults;
     }
 
     @Override
-    public Integer compute() {
-      int observedCases = 0;
+    public void compute() {
       if(settlements.size() == 1) {
-        Territory settlement = ((TerritoryNode)settlements.get(0)).territory;
-        Resolution resolution = (Resolution)arguments.get(RESOLUTION);
-        Interval yearInterval = (Interval)arguments.get(YEAR_INTERVAL);
-        int year = (Integer)arguments.get(YEAR);
-        int month = (Integer)arguments.get(MONTH);
-        Gender gender = (Gender)arguments.get(GENDER);
-        Interval ageInterval = (Interval)arguments.get(AGE_INTERVAL);
-        String diagnosesClause = (String)arguments.get(DIAGNOSES_CLAUSE);
+        Territory settlement = settlements.get(0);
+        Integer year = (Integer)arguments.get(Param.year);
+        Gender gender = (Gender)arguments.get(Param.gender);
+        Interval ageInterval = (Interval)arguments.get(Param.ageInterval);
+        String diagnosesClause = (String)arguments.get(Param.diagnosesClause);
 
-        String sqlString = Sqls.AND.join(MORTALITY_SQL + Sqls.createClause(resolution, yearInterval, year, month),
-          Sqls.createClause(gender), Sqls.createClause(ageInterval), Sqls.createClause(settlement), diagnosesClause);
-        try(Connection connection = Process.DATA_DB.getConnection(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sqlString)) {
-          resultSet.next();
-          observedCases = resultSet.getInt(1);
-        } catch(SQLException exc) {
-          throw new RuntimeException(exc);
+        Key key = new Key.Builder().setYear(year).setGender(gender).setAgeInterval(ageInterval).setTerritory(settlement).build();
+        Value value = stepResults.get(key);
+        if(value == null) {
+          String populationSqlString = Sqls.AND.join(POPULATION_SQL + Sqls.createClause(year), Sqls.createClause(gender),
+            Sqls.createClause(ageInterval), Sqls.createClause(settlement));
+          String totalCasesSqlString = Sqls.AND.join(MORTALITY_SQL + Sqls.createClause(year), Sqls.createClause(gender),
+            Sqls.createClause(ageInterval), Sqls.createClause(settlement));
+
+          String observedCasesSqlString = Sqls.AND.join(totalCasesSqlString, diagnosesClause);
+          try(Connection connection = Process.DATA_DB.getConnection(); Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(populationSqlString);
+            resultSet.next();
+            int population = resultSet.getInt(1);
+            resultSet.close();
+            
+            resultSet = statement.executeQuery(totalCasesSqlString);
+            resultSet.next();
+            int totalCases = resultSet.getInt(1);
+            resultSet.close();
+            
+            resultSet = statement.executeQuery(observedCasesSqlString);
+            resultSet.next();
+            int observedCases = resultSet.getInt(1);
+            resultSet.close();
+
+            value = new Value.Builder().setPopulation(population).setTotalCases(totalCases).setObservedCases(observedCases).build();
+            stepResults.put(key, value);
+          } catch(SQLException exc) {
+            throw new RuntimeException(exc);
+          }
         }
+        progress.increment();
       } else {
-        List<ForkJoinTask<Integer>> tasks = new ArrayList<>();
+        List<ForkJoinTask<Void>> tasks = new ArrayList<>();
         int halfIdx = settlements.size() / 2;
-        tasks.add(new RangeCasesCounter(settlements.subList(0, halfIdx), arguments));
-        tasks.add(new RangeCasesCounter(settlements.subList(halfIdx, settlements.size()), arguments));
-        for(ForkJoinTask<Integer> task : invokeAll(tasks)) {
-          observedCases += task.join();
-        }
+        tasks.add(new SettlementCasesCounter(progress, settlements.subList(0, halfIdx), arguments, stepResults));
+        tasks.add(new SettlementCasesCounter(progress, settlements.subList(halfIdx, settlements.size()), arguments, stepResults));
+        invokeAll(tasks);
       }
-      return observedCases;
     }
   }
 }

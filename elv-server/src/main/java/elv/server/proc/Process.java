@@ -6,7 +6,7 @@ import elv.common.Analysis;
 import elv.common.Attribute;
 import elv.common.io.Tracks;
 import elv.common.params.Param;
-import elv.common.step.Progresses;
+import elv.common.step.Progress;
 import elv.server.Config;
 import elv.server.io.Files;
 import elv.server.result.Key;
@@ -35,8 +35,8 @@ public final class Process implements Runnable {
   private DB resultDb;
   private Map<Param, Object> params;
   private List<Step> steps;
-  private Progresses progresses;
   private Map<String, Map<Key, Value>> results;
+  private Progress progress;
 
   public Process(Analysis analysis, Attribute analysisAttribute) {
     this.analysis = analysis;
@@ -76,18 +76,19 @@ public final class Process implements Runnable {
     return resultDb;
   }
 
-  public Progresses getProgresses() {
-    if(progresses == null) {
-      progresses = new Progresses("Initializing");
-    }
-    return progresses;
+  public Progress getProgress() {
+    return progress;
+  }
+
+  public void setProgress(Progress progress) {
+    this.progress = progress;
   }
 
   @Override
   public void run() {
     try {
       LOG.info("ELV:: Processing started for " + analysis);
-      getProgresses();
+      getProgress();
       getResultDb();
       analysisAttribute.put(Analysis.Attribute.STATE.name(), Analysis.State.STARTED);
       Files.store(analysisAttribute, analysis.getAttributeTrack());
@@ -98,7 +99,6 @@ public final class Process implements Runnable {
       steps = loadSteps();
       for(Step step : steps) {
         String stepName = step.getClass().getSimpleName();
-        progresses.setMessage(stepName);
         Map<Key, Value> stepResult = getResultDb().getHashMap(stepName);
         getResults().put(stepName, stepResult);
 

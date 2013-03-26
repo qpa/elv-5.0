@@ -102,7 +102,7 @@ public class Key implements Serializable {
       return this;
     }
 
-    public Builder setRange(Territory territory) {
+    public Builder setTerritory(Territory territory) {
       this.territory = territory;
       return this;
     }

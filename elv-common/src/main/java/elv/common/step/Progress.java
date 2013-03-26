@@ -28,6 +28,10 @@ public class Progress implements Serializable {
     this.value = value;
   }
 
+  public final void increment() {
+    value++;
+  }
+
   /**
    * Getter of the visibility.
    * @return true, if there are more than 1 objects to progress.

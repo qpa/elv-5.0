@@ -31,7 +31,7 @@ public class MortalityPreparationTest {
     Analysis analysis = new Analysis.MortalityPreparation(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
     Attribute analysisAttribute = new Attribute(null);
     Process process = new Process(analysis, analysisAttribute);
-    process.getProgresses();
+    process.getProgress();
     process.getResults();
 
     List<Gender> genders = new ArrayList<>();

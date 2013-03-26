@@ -38,22 +38,27 @@ public class Sqls {
     if(territory == null || territory == Territory.ROOT) {
       return null;
     }
-    return "effective_residence = " + territory.code;
+    return "settlement = " + territory.code;
   }
 
   public static String createClause(Resolution resolution, Interval yearInterval, Integer year, Integer month) {
     if(resolution == Resolution.YEAR_INTERVALY) {
-      return "death_year BETWEEN " + yearInterval.from + " AND " + yearInterval.to;
+      return "year BETWEEN " + yearInterval.from + " AND " + yearInterval.to;
     } else {
-      return AND.join("death_year = " + year, resolution == Resolution.MONTHLY ? "death_month = " + month : null);
+      return AND.join("year = " + year, resolution == Resolution.MONTHLY ? "month = " + month : null);
     }
   }
 
+  public static String createClause(Integer year) {
+    assert year != null;
+    return "year = " + year;
+  }
+
   public static String createClause(List<Diagnosis> diseaseDiagnoses, List<Diagnosis> mortalityDiagnoses) {
-    if(diseaseDiagnoses == null || diseaseDiagnoses.isEmpty() ||(diseaseDiagnoses.contains(Diagnosis.ROOT))) {
+    if(diseaseDiagnoses == null || diseaseDiagnoses.isEmpty() || (diseaseDiagnoses.contains(Diagnosis.ROOT))) {
       return null;
     }
-    if(mortalityDiagnoses == null || mortalityDiagnoses.isEmpty() ||(mortalityDiagnoses.contains(Diagnosis.ROOT))) {
+    if(mortalityDiagnoses == null || mortalityDiagnoses.isEmpty() || (mortalityDiagnoses.contains(Diagnosis.ROOT))) {
       mortalityDiagnoses = new ArrayList<>();
       // Defaults to the first disease, because there are a lot of years with just this completed.
       mortalityDiagnoses.add(new Diagnosis("1", ""));

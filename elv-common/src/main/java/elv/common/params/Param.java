@@ -4,21 +4,13 @@ package elv.common.params;
  * Class for parameters.
  */
 public enum Param {
+  // Parameter types at input
   locale,
-  genders, resolution, benchmarkYear, yearWindows, yearIntervals, ageIntervals,
+  genders, gender, resolution, benchmarkYear, yearWindows, yearIntervals, years, ageIntervals,
   baseRanges, benchmarkRanges, diseaseDiagnoses, mortalityDiagnoses,
-  standardizationMode, smoothingMode, smoothingCategory;
-//  public Resolution resolution;
-//  public int benchmarkYear;
-//  public int yearWindows;
-//  public List<Interval> yearIntervals;
-//  public List<Interval> ageIntervals;
-//  public List<Territory> baseRanges;
-//  public List<Territory> benchmarkRanges;
-//  public List<Diagnosis> diseaseDiagnoses;
-//  public Standardization standardizationMode;
-//  public Smoothing smoothingMode;
-//  public Category smoothingCategory;
+  standardizationMode, smoothingMode, smoothingCategory,
+  // Parameter types at process
+  yearInterval, year, month, ageInterval, settlements, diagnosesClause;
 
   public void setDefaultValues() {
 //    standardizationMode = Standardization.INDIRECT;
