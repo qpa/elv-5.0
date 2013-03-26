@@ -90,29 +90,10 @@ public class MortalityStandardPreparation implements Step {
             Sqls.createClause(ageInterval), Sqls.createClause(settlement));
           String totalCasesSqlString = Sqls.AND.join(MORTALITY_SQL + Sqls.createClause(year), Sqls.createClause(gender),
             Sqls.createClause(ageInterval), Sqls.createClause(settlement));
-
           String observedCasesSqlString = Sqls.AND.join(totalCasesSqlString, diagnosesClause);
-          try(Connection connection = Process.DATA_DB.getConnection(); Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(populationSqlString);
-            resultSet.next();
-            int population = resultSet.getInt(1);
-            resultSet.close();
-            
-            resultSet = statement.executeQuery(totalCasesSqlString);
-            resultSet.next();
-            int totalCases = resultSet.getInt(1);
-            resultSet.close();
-            
-            resultSet = statement.executeQuery(observedCasesSqlString);
-            resultSet.next();
-            int observedCases = resultSet.getInt(1);
-            resultSet.close();
-
-            value = new Value.Builder().setPopulation(population).setTotalCases(totalCases).setObservedCases(observedCases).build();
-            stepResults.put(key, value);
-          } catch(SQLException exc) {
-            throw new RuntimeException(exc);
-          }
+          value = select(populationSqlString, totalCasesSqlString, observedCasesSqlString);
+          stepResults.put(key, value);
+Process.LOG.info(key + ":" + value);
         }
         progress.increment();
       } else {
@@ -121,6 +102,30 @@ public class MortalityStandardPreparation implements Step {
         tasks.add(new SettlementCasesCounter(progress, settlements.subList(0, halfIdx), arguments, stepResults));
         tasks.add(new SettlementCasesCounter(progress, settlements.subList(halfIdx, settlements.size()), arguments, stepResults));
         invokeAll(tasks);
+      }
+    }
+
+    private Value select(String populationSqlString, String totalCasesSqlString, String observedCasesSqlString) {
+      try(Connection connection = Process.DATA_DB.getConnection(); Statement statement = connection.createStatement()) {
+        ResultSet resultSet = statement.executeQuery(populationSqlString);
+        resultSet.next();
+        int population = resultSet.getInt(1);
+        resultSet.close();
+
+        resultSet = statement.executeQuery(totalCasesSqlString);
+        resultSet.next();
+        int totalCases = resultSet.getInt(1);
+        resultSet.close();
+
+        resultSet = statement.executeQuery(observedCasesSqlString);
+        resultSet.next();
+        int observedCases = resultSet.getInt(1);
+        resultSet.close();
+
+        return new Value.Builder().setPopulation(population).setTotalCases(totalCases).setObservedCases(observedCases).build();
+
+      } catch(SQLException exc) {
+        throw new RuntimeException(exc);
       }
     }
   }

@@ -7,7 +7,6 @@ import elv.common.params.Diagnosis;
 import elv.common.params.Gender;
 import elv.common.params.Interval;
 import elv.common.params.Param;
-import elv.common.params.Resolution;
 import elv.common.params.Territory;
 import elv.common.params.TerritoryNode;
 import elv.server.proc.Process;
@@ -22,13 +21,13 @@ import org.testng.annotations.Test;
 /**
  *
  */
-public class MortalityPreparationTest {
-  public MortalityPreparationTest() {
+public class MortalityStandardPreparationTest {
+  public MortalityStandardPreparationTest() {
   }
 
   @Test
   public void testCompute() throws IOException {
-    Analysis analysis = new Analysis.MortalityPreparation(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
+    Analysis analysis = new Analysis.MortalityStandardization(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
     Attribute analysisAttribute = new Attribute(null);
     Process process = new Process(analysis, analysisAttribute);
     process.getProgress();
@@ -38,8 +37,6 @@ public class MortalityPreparationTest {
     genders.add(Gender.MALES);
     genders.add(Gender.FEMALES);
     process.getParams().put(Param.genders, genders);
-
-    process.getParams().put(Param.resolution, Resolution.YEAR_INTERVALY);
 
     final List<Diagnosis> diagnoses = new ArrayList<>();
     diagnoses.add(new Diagnosis("C33", "A légcső rosszindulatú daganata"));
@@ -71,10 +68,10 @@ public class MortalityPreparationTest {
     rangeNodes.add(rangeNode);
     process.getParams().put(Param.baseRanges, rangeNodes);
 
-    String stepName = MortalityPreparation.class.getSimpleName();
+    String stepName = MortalityStandardPreparation.class.getSimpleName();
     Map<Key, Value> stepResult = process.getResultDb().getHashMap(stepName);
     process.getResults().put(stepName, stepResult);
 
-    new MortalityPreparation().compute(process);
+    new MortalityStandardPreparation().compute(process);
   }
 }

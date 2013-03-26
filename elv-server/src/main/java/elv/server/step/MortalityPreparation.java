@@ -81,7 +81,7 @@ public class MortalityPreparation implements Step {
                   int observedCases = Process.EXECUTOR.invoke(new RangeCasesCounter(iRangeNode.getChildren(), arguments));
                   value = new Value.Builder().setObservedCases(observedCases).build();
                   stepResults.put(key, value);
-                  Process.LOG.info(key + ":" + value);
+Process.LOG.info(key + ":" + value);
                 }
                 progress.increment();
               }
@@ -117,12 +117,7 @@ public class MortalityPreparation implements Step {
 
         String sqlString = Sqls.AND.join(SQL + Sqls.createClause(resolution, yearInterval, year, month),
           Sqls.createClause(gender), Sqls.createClause(ageInterval), Sqls.createClause(settlement), diagnosesClause);
-        try(Connection connection = Process.DATA_DB.getConnection(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sqlString)) {
-          resultSet.next();
-          observedCases = resultSet.getInt(1);
-        } catch(SQLException exc) {
-          throw new RuntimeException(exc);
-        }
+        observedCases = select(sqlString);
       } else {
         List<ForkJoinTask<Integer>> tasks = new ArrayList<>();
         int halfIdx = settlementNodes.size() / 2;
@@ -133,6 +128,15 @@ public class MortalityPreparation implements Step {
         }
       }
       return observedCases;
+    }
+
+    private int select(String sqlString) {
+      try(Connection connection = Process.DATA_DB.getConnection(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sqlString)) {
+        resultSet.next();
+        return resultSet.getInt(1);
+      } catch(SQLException exc) {
+        throw new RuntimeException(exc);
+      }
     }
   }
 }

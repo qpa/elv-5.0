@@ -140,6 +140,7 @@ public class Params {
       if(benchmarkRanges != null) {
         addSettlements(benchmarkRanges, settlementSet);
       }
+      settlements = new ArrayList<>(settlementSet);
       process.getParams().put(Param.settlements, settlements);
     }
     return settlements;

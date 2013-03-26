@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * A territory.
  */
-public class Territory implements Serializable {
+public class Territory implements Comparable<Territory>, Serializable {
   public static final Territory ROOT = new Territory("0", "*", 0, 0, 0);
   public final String code;
   public final String name;
@@ -51,5 +51,10 @@ public class Territory implements Serializable {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public int compareTo(Territory other) {
+    return code.compareTo(other.code);
   }
 }
