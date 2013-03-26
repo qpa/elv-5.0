@@ -25,7 +25,7 @@ public class Params {
     Gender gender = (Gender)process.getParams().get(Param.gender);
     if(gender == null) {
       List<Gender> genders = (List<Gender>)process.getParams().get(Param.genders);
-      if(genders == null || genders.isEmpty() || genders.size() == Gender.values().length) {
+      if(genders == null || genders.isEmpty() || genders.size() == 2) {
         gender = Gender.ALL;
       } else {
         gender = genders.get(0);
