@@ -10,7 +10,7 @@ public enum Param {
   baseRanges, benchmarkRanges, diseaseDiagnoses, mortalityDiagnoses,
   standardizationMode, smoothingMode, smoothingCategory,
   // Parameter types at process
-  yearInterval, year, month, ageInterval, settlements, diagnosesClause;
+  yearInterval, year, month, yearWindowIntervals, ageInterval, settlements, diagnosesClause;
 
   public void setDefaultValues() {
 //    standardizationMode = Standardization.INDIRECT;

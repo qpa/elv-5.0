@@ -9,6 +9,7 @@ import elv.common.params.Resolution;
 import elv.common.params.Territory;
 import elv.common.params.TerritoryNode;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -21,11 +22,15 @@ public class Params {
   private Params() {
   }
 
+  public static boolean isNullOrEmpty(Collection collection) {
+    return collection == null || collection.isEmpty();
+  }
+  
   public static Gender getGender(Process process) {
     Gender gender = (Gender)process.getParams().get(Param.gender);
     if(gender == null) {
       List<Gender> genders = (List<Gender>)process.getParams().get(Param.genders);
-      if(genders == null || genders.isEmpty() || genders.size() == 2) {
+      if(isNullOrEmpty(genders) || genders.size() == 2) {
         gender = Gender.ALL;
       } else {
         gender = genders.get(0);
@@ -37,7 +42,7 @@ public class Params {
 
   public static List<Gender> getGenders(Process process) {
     List<Gender> genders = (List<Gender>)process.getParams().get(Param.genders);
-    if(genders == null || genders.isEmpty()) {
+    if(isNullOrEmpty(genders)) {
       genders = new ArrayList<>();
       genders.add(Gender.ALL);
       process.getParams().put(Param.genders, genders);
@@ -56,7 +61,7 @@ public class Params {
 
   public static List<Interval> getYearIntervals(Process process) {
     List<Interval> yearIntervals = (List<Interval>)process.getParams().get(Param.yearIntervals);
-    if(yearIntervals == null) {
+    if(isNullOrEmpty(yearIntervals)) {
       int year = new DateTime().getYear();
       yearIntervals = new ArrayList<>();
       yearIntervals.add(new Interval(year, year));
@@ -67,7 +72,7 @@ public class Params {
 
   public static List<Integer> getYears(Process process) {
     List<Integer> years = (List<Integer>)process.getParams().get(Param.years);
-    if(years == null) {
+    if(isNullOrEmpty(years)) {
       final List<Interval> yearIntervals = getYearIntervals(process);
       final Set<Integer> yearSet = new TreeSet<>();
       final Integer benchmarkYear = (Integer)process.getParams().get(Param.benchmarkYear);
@@ -85,9 +90,35 @@ public class Params {
     return years;
   }
 
+  public static List<List<Interval>> getYearWindowIntervals(Process process) {
+    List<List<Interval>> yearWindowIntervals = (List<List<Interval>>)process.getParams().get(Param.yearWindowIntervals);
+    if(isNullOrEmpty(yearWindowIntervals)) {
+      List<Integer> yearWindows = (List<Integer>)process.getParams().get(Param.yearWindows);
+      if(isNullOrEmpty(yearWindows)) {
+        yearWindows = new ArrayList<>();
+        yearWindows.add(1);
+      }
+      List<Interval> yearIntervals = getYearIntervals(process);
+      for(int iYearWindow : yearWindows) {
+        List<Interval> iYearIntervals = new ArrayList<>();
+        for(int yearIntervalCount = 0; yearIntervalCount < yearIntervals.size(); yearIntervalCount++) {
+          Interval iYearInterval = yearIntervals.get(yearIntervalCount);
+          int from = iYearInterval.from;
+          int to = ((yearIntervalCount + iYearWindow - 1 < yearIntervals.size())
+            ? yearIntervals.get(yearIntervalCount + iYearWindow - 1).to
+            : yearIntervals.get(yearIntervals.size() - 1).to);
+          iYearIntervals.add(new Interval(from, to));
+        }
+        yearWindowIntervals.add(iYearIntervals);
+      }
+      process.getParams().put(Param.yearWindowIntervals, yearWindowIntervals);
+    }
+    return yearWindowIntervals;
+  }
+
   public static List<Interval> getAgeIntervals(Process process) {
     List<Interval> ageIntervals = (List<Interval>)process.getParams().get(Param.ageIntervals);
-    if(ageIntervals == null) {
+    if(isNullOrEmpty(ageIntervals)) {
       ageIntervals = new ArrayList<>();
       ageIntervals.add(Interval.AGE);
       process.getParams().put(Param.ageIntervals, ageIntervals);
@@ -97,7 +128,7 @@ public class Params {
 
   public static List<Diagnosis> getDiseaseDiagnoses(Process process) {
     List<Diagnosis> diseaseDiagnoses = (List<Diagnosis>)process.getParams().get(Param.diseaseDiagnoses);
-    if(diseaseDiagnoses == null) {
+    if(isNullOrEmpty(diseaseDiagnoses)) {
       diseaseDiagnoses = new ArrayList<>();
       diseaseDiagnoses.add(Diagnosis.ROOT);
       process.getParams().put(Param.diseaseDiagnoses, diseaseDiagnoses);
@@ -107,7 +138,7 @@ public class Params {
 
   public static List<Diagnosis> getMortalityDiagnoses(Process process) {
     List<Diagnosis> mortalityDiagnoses = (List<Diagnosis>)process.getParams().get(Param.mortalityDiagnoses);
-    if(mortalityDiagnoses == null) {
+    if(isNullOrEmpty(mortalityDiagnoses)) {
       mortalityDiagnoses = new ArrayList<>();
       mortalityDiagnoses.add(Diagnosis.ROOT);
       process.getParams().put(Param.mortalityDiagnoses, mortalityDiagnoses);
@@ -117,7 +148,7 @@ public class Params {
 
   public static List<TerritoryNode> getBaseRangeNodes(Process process) {
     List<TerritoryNode> rangeNodes = (List<TerritoryNode>)process.getParams().get(Param.baseRanges);
-    if(rangeNodes == null) {
+    if(isNullOrEmpty(rangeNodes)) {
       rangeNodes = new ArrayList<>();
       final TerritoryNode rangeNode = new TerritoryNode(Territory.ROOT);
       rangeNode.addChild(new TerritoryNode(Territory.ROOT));
@@ -133,7 +164,7 @@ public class Params {
 
   public static List<Territory> getSettlements(Process process) {
     List<Territory> settlements = (List<Territory>)process.getParams().get(Param.settlements);
-    if(settlements == null) {
+    if(isNullOrEmpty(settlements)) {
       final Set<Territory> settlementSet = new TreeSet<>();
       addSettlements(getBaseRangeNodes(process), settlementSet);
       List<TerritoryNode> benchmarkRanges = getBenchmarkRangeNodes(process);
