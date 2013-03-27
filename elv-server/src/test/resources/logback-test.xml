@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration error="true">
+<configuration debug="true">
   <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
     <encoder class="ch.qos.logback.classic.PatternLayout">
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
-  
-  <root level="error">
+
+  <root level="debug">
     <appender-ref ref="stdout" />
   </root>
 </configuration>

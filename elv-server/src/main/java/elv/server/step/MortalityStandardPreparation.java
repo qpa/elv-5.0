@@ -1,10 +1,10 @@
 package elv.server.step;
 
+import com.google.common.base.Joiner;
 import elv.common.params.Gender;
 import elv.common.params.Interval;
 import elv.common.params.Param;
 import elv.common.params.Territory;
-import elv.common.step.Progress;
 import elv.server.proc.Params;
 import elv.server.proc.Process;
 import elv.server.result.Key;
@@ -25,50 +25,48 @@ import java.util.concurrent.RecursiveAction;
 /**
  * Mortality preparation for standardization.
  */
-public class MortalityStandardPreparation implements Step {
-  public static final String POPULATION_SQL = "SELECT SUM(population) FROM population WHERE  ";
-  public static final String MORTALITY_SQL = "SELECT COUNT(*) FROM mortality WHERE ";
+public class MortalityStandardPreparation extends AbstractStep {
+  private Gender gender;
+  private List<Integer> years;
+  private List<Interval> ageIntervals;
+  private List<Territory> settlements;
+  private String diagnosesClause;
 
   @Override
-  public void compute(Process process) {
-    String stepName = this.getClass().getSimpleName();
-    Map<Key, Value> stepResults = process.getResults().get(stepName);
+  public int initParams(Process process) {
+    gender = Params.getGender(process);
+    years = Params.getYears(process);
+    ageIntervals = Params.getAgeIntervals(process);
+    settlements = Params.getSettlements(process);
+    diagnosesClause = Sqls.createClause(Params.getDiseaseDiagnoses(process), Params.getMortalityDiagnoses(process));
+    return years.size() * ageIntervals.size() * settlements.size();
+  }
 
-    // Get parameters
-    Gender gender = Params.getGender(process);
-    List<Integer> years = Params.getYears(process);
-    List<Interval> ageIntervals = Params.getAgeIntervals(process);
-    List<Territory> settlements = Params.getSettlements(process);
-    String diagnosesClause = Sqls.createClause(Params.getDiseaseDiagnoses(process), Params.getMortalityDiagnoses(process));
-
+  @Override
+  public void doCompute(Process process) {
     // Prepare multithreading arguments
     Map<Param, Object> arguments = new HashMap<>();
     arguments.put(Param.gender, gender);
     arguments.put(Param.diagnosesClause, diagnosesClause);
 
-    // Set progress
-    int maxProgressValue = years.size() * ageIntervals.size() * settlements.size();
-    Progress progress = new Progress(stepName, 0, maxProgressValue);
-    process.setProgress(progress);
-
     for(int iYear : years) {
       arguments.put(Param.year, iYear);
       for(Interval iAgeInterval : ageIntervals) {
         arguments.put(Param.ageInterval, iAgeInterval);
-        Process.EXECUTOR.invoke(new SettlementCasesCounter(progress, settlements, arguments, stepResults));
+        Process.EXECUTOR.invoke(new SettlementCasesCounter(process, settlements, arguments, results));
       }
     }
     process.getResultDb().commit();
   }
 
   private static class SettlementCasesCounter extends RecursiveAction {
-    private final Progress progress;
+    private final Process process;
     private final List<Territory> settlements;
     private final Map<Param, Object> arguments;
     private final Map<Key, Value> stepResults;
 
-    public SettlementCasesCounter(Progress progress, List<Territory> settlements, Map<Param, Object> arguments, Map<Key, Value> stepResults) {
-      this.progress = progress;
+    public SettlementCasesCounter(Process process, List<Territory> settlements, Map<Param, Object> arguments, Map<Key, Value> stepResults) {
+      this.process = process;
       this.settlements = settlements;
       this.arguments = arguments;
       this.stepResults = stepResults;
@@ -91,16 +89,17 @@ public class MortalityStandardPreparation implements Step {
           String totalCasesSqlString = Sqls.AND.join(MORTALITY_SQL + Sqls.createClause(year), Sqls.createClause(gender),
             Sqls.createClause(ageInterval), Sqls.createClause(settlement));
           String observedCasesSqlString = Sqls.AND.join(totalCasesSqlString, diagnosesClause);
+          Process.LOG.debug(Joiner.on("\n").join(populationSqlString, totalCasesSqlString, observedCasesSqlString));
           value = select(populationSqlString, totalCasesSqlString, observedCasesSqlString);
           stepResults.put(key, value);
-Process.LOG.info(key + ":" + value);
         }
-        progress.increment();
+        Process.LOG.info(key + ":" + value);
+        process.incrementProgress();
       } else {
         List<ForkJoinTask<Void>> tasks = new ArrayList<>();
         int halfIdx = settlements.size() / 2;
-        tasks.add(new SettlementCasesCounter(progress, settlements.subList(0, halfIdx), arguments, stepResults));
-        tasks.add(new SettlementCasesCounter(progress, settlements.subList(halfIdx, settlements.size()), arguments, stepResults));
+        tasks.add(new SettlementCasesCounter(process, settlements.subList(0, halfIdx), arguments, stepResults));
+        tasks.add(new SettlementCasesCounter(process, settlements.subList(halfIdx, settlements.size()), arguments, stepResults));
         invokeAll(tasks);
       }
     }

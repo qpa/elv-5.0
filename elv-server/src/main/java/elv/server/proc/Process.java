@@ -76,19 +76,18 @@ public final class Process implements Runnable {
     return resultDb;
   }
 
-  public Progress getProgress() {
-    return progress;
+  public void createProgress(String name, int maxProgressValue) {
+    progress = new Progress(name, 0, maxProgressValue);
   }
 
-  public void setProgress(Progress progress) {
-    this.progress = progress;
+  public void incrementProgress() {
+    progress.increment();
   }
 
   @Override
   public void run() {
     try {
       LOG.info("ELV:: Processing started for " + analysis);
-      getProgress();
       getResultDb();
       analysisAttribute.put(Analysis.Attribute.STATE.name(), Analysis.State.STARTED);
       Files.store(analysisAttribute, analysis.getAttributeTrack());
@@ -98,12 +97,7 @@ public final class Process implements Runnable {
 
       steps = loadSteps();
       for(Step step : steps) {
-        String stepName = step.getClass().getSimpleName();
-        Map<Key, Value> stepResult = getResultDb().getHashMap(stepName);
-        getResults().put(stepName, stepResult);
-
         step.compute(this);
-
         if(Thread.interrupted()) {
           throw new InterruptedException("Stopped " + analysis);
         }

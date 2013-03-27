@@ -30,7 +30,6 @@ public class MortalityStandardPreparationTest {
     Analysis analysis = new Analysis.MortalityStandardization(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
     Attribute analysisAttribute = new Attribute(null);
     Process process = new Process(analysis, analysisAttribute);
-    process.getProgress();
     process.getResults();
 
     List<Gender> genders = new ArrayList<>();

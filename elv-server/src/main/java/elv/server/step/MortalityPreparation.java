@@ -7,7 +7,6 @@ import elv.common.params.Param;
 import elv.common.params.Resolution;
 import elv.common.params.Territory;
 import elv.common.params.TerritoryNode;
-import elv.common.step.Progress;
 import elv.server.proc.Params;
 import elv.server.proc.Process;
 import elv.server.result.Key;
@@ -27,34 +26,34 @@ import java.util.concurrent.RecursiveTask;
 /**
  * Mortality preparation.
  */
-public class MortalityPreparation implements Step {
-  public static final String SQL = "SELECT COUNT(*) FROM mortality WHERE ";
+public class MortalityPreparation extends AbstractStep {
+  private List<Gender> genders;
+  private Resolution resolution;
+  private List<Interval> yearIntervals;
+  private List<Interval> ageIntervals;
+  private List<TerritoryNode> baseRangeNodes;
+  private String diagnosesClause;
 
   @Override
-  public void compute(Process process) {
-    String stepName = this.getClass().getSimpleName();
-    Map<Key, Value> stepResults = process.getResults().get(stepName);
+  public int initParams(Process process) {
+    genders = Params.getGenders(process);
+    resolution = Params.getResolution(process);
+    yearIntervals = Params.getYearIntervals(process);
+    ageIntervals = Params.getAgeIntervals(process);
+    baseRangeNodes = Params.getBaseRangeNodes(process);
+    diagnosesClause = Sqls.createClause(Params.getDiseaseDiagnoses(process), Params.getMortalityDiagnoses(process));
+    int months = (resolution == Resolution.MONTHLY ? 12 : 1);
+    int yearOrIntervalCount = (resolution == Resolution.YEAR_INTERVALY ? yearIntervals.size() : Params.getYears(process).size());
+    return yearOrIntervalCount * months * genders.size() * ageIntervals.size() * baseRangeNodes.size();
+  }
 
-    // Get parameters
-    List<Gender> genders = Params.getGenders(process);
-    Resolution resolution = Params.getResolution(process);
-    List<Interval> yearIntervals = Params.getYearIntervals(process);
-    List<Interval> ageIntervals = Params.getAgeIntervals(process);
-    List<TerritoryNode> baseRangeNodes = Params.getBaseRangeNodes(process);
-    String diagnosesClause = Sqls.createClause(Params.getDiseaseDiagnoses(process), Params.getMortalityDiagnoses(process));
-
+  @Override
+  public void doCompute(Process process) {
     // Prepare multithreading arguments
     Map<Param, Object> arguments = new HashMap<>();
     arguments.put(Param.resolution, resolution);
     arguments.put(Param.diagnosesClause, diagnosesClause);
 
-    // Set progress
-    int months = (resolution == Resolution.MONTHLY ? 12 : 1);
-    int yearOrIntervalCount = (resolution == Resolution.YEAR_INTERVALY ? yearIntervals.size() : Params.getYears(process).size());
-    int maxProgressValue = yearOrIntervalCount * months * genders.size() * ageIntervals.size() * baseRangeNodes.size();
-    Progress progress = new Progress(stepName, 0, maxProgressValue);
-    process.setProgress(progress);
-    
     for(Interval iYearInterval : yearIntervals) {
       arguments.put(Param.yearInterval, iYearInterval);
 
@@ -63,6 +62,7 @@ public class MortalityPreparation implements Step {
         Integer iYear = (resolution == Resolution.YEAR_INTERVALY ? null : iYearInterval.from + yearCount);
         arguments.put(Param.year, iYear);
 
+        int months = (resolution == Resolution.MONTHLY ? 12 : 1);
         for(int monthCount = 0; monthCount < months; monthCount++) {
           Integer iMonth = (resolution == Resolution.MONTHLY ? monthCount + 1 : null);
           arguments.put(Param.month, iMonth);
@@ -76,14 +76,14 @@ public class MortalityPreparation implements Step {
               for(TerritoryNode iRangeNode : baseRangeNodes) {
                 Key key = new Key.Builder().setYearInterval(iYearInterval).setYear(iYear).setMonth(iMonth)
                   .setGender(iGender).setAgeInterval(iAgeInterval).setTerritory(iRangeNode.territory).build();
-                Value value = stepResults.get(key);
+                Value value = results.get(key);
                 if(value == null) {
                   int observedCases = Process.EXECUTOR.invoke(new RangeCasesCounter(iRangeNode.getChildren(), arguments));
                   value = new Value.Builder().setObservedCases(observedCases).build();
-                  stepResults.put(key, value);
-Process.LOG.info(key + ":" + value);
+                  results.put(key, value);
+                  Process.LOG.info(key + ":" + value);
                 }
-                progress.increment();
+                process.incrementProgress();
               }
             }
           }
@@ -115,7 +115,7 @@ Process.LOG.info(key + ":" + value);
         Interval ageInterval = (Interval)arguments.get(Param.ageInterval);
         String diagnosesClause = (String)arguments.get(Param.diagnosesClause);
 
-        String sqlString = Sqls.AND.join(SQL + Sqls.createClause(resolution, yearInterval, year, month),
+        String sqlString = Sqls.AND.join(MORTALITY_SQL + Sqls.createClause(resolution, yearInterval, year, month),
           Sqls.createClause(gender), Sqls.createClause(ageInterval), Sqls.createClause(settlement), diagnosesClause);
         observedCases = select(sqlString);
       } else {
