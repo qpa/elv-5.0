@@ -10,24 +10,24 @@ import java.util.Objects;
  * Result keys.
  */
 public class Key implements Serializable {
-  public final Integer yearWindow;
+  public final Territory territory;
+  public final Gender gender;
+  public final Interval ageInterval;
   public final Interval yearInterval;
   public final Integer year;
   public final Integer month;
-  public final Interval ageInterval;
-  public final Gender gender;
-  public final Territory territory;
+  public final Integer yearWindow;
   public final String string;
   private int hash;
 
   private Key(Integer yearWindow, Interval yearInterval, Integer year, Integer month, Interval ageInterval, Gender gender, Territory territory) {
-    this.yearWindow = yearWindow;
+    this.territory = territory;
+    this.gender = gender;
+    this.ageInterval = ageInterval;
     this.yearInterval = yearInterval;
     this.year = year;
     this.month = month;
-    this.ageInterval = ageInterval;
-    this.gender = gender;
-    this.territory = territory;
+    this.yearWindow = yearWindow;
     this.string = Result.CSV.join(yearWindow, yearInterval, year, ageInterval, gender, territory);
   }
 
@@ -64,16 +64,26 @@ public class Key implements Serializable {
   }
 
   public static class Builder {
-    private Integer yearWindow = null;
+    private Territory territory = null;
+    private Gender gender = null;
+    private Interval ageInterval = null;
     private Interval yearInterval = null;
     private Integer year = null;
     private Integer month = null;
-    private Interval ageInterval = null;
-    private Gender gender = null;
-    private Territory territory = null;
+    private Integer yearWindow = null;
 
-    public Builder setYearWindow(Integer yearWindow) {
-      this.yearWindow = yearWindow;
+    public Builder setTerritory(Territory territory) {
+      this.territory = territory;
+      return this;
+    }
+
+    public Builder setGender(Gender gender) {
+      this.gender = gender;
+      return this;
+    }
+
+    public Builder setAgeInterval(Interval ageInterval) {
+      this.ageInterval = ageInterval;
       return this;
     }
 
@@ -92,18 +102,8 @@ public class Key implements Serializable {
       return this;
     }
 
-    public Builder setAgeInterval(Interval ageInterval) {
-      this.ageInterval = ageInterval;
-      return this;
-    }
-
-    public Builder setGender(Gender gender) {
-      this.gender = gender;
-      return this;
-    }
-
-    public Builder setTerritory(Territory territory) {
-      this.territory = territory;
+    public Builder setYearWindow(Integer yearWindow) {
+      this.yearWindow = yearWindow;
       return this;
     }
 
