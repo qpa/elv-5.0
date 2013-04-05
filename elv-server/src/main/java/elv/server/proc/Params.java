@@ -6,6 +6,7 @@ import elv.common.params.Interval;
 import elv.common.params.Node;
 import elv.common.params.Param;
 import elv.common.params.Resolution;
+import elv.common.params.Standardization;
 import elv.common.params.Territory;
 import elv.common.params.TerritoryNode;
 import java.util.ArrayList;
@@ -183,5 +184,14 @@ public class Params {
         settlementSet.add(((TerritoryNode)iSettlementNode).territory);
       }
     }
+  }
+
+  public static Standardization getStandardizationMode(Process process) {
+    Standardization standardizationMode = (Standardization)process.getParams().get(Param.standardizationMode);
+    if(standardizationMode == null) {
+      standardizationMode = Standardization.INDIRECT;
+      process.getParams().put(Param.standardizationMode, standardizationMode);
+    }
+    return standardizationMode;
   }
 }

@@ -11,10 +11,6 @@ public class TerritoryNode extends Node {
     this.territory = territory;
   }
 
-  public Territory getTerritory() {
-    return territory;
-  }
-
   /**
    * Creator of a new custom range code.
    * @return the newly created code.
