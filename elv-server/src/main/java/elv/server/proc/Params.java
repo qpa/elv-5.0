@@ -26,7 +26,7 @@ public class Params {
   public static boolean isNullOrEmpty(Collection collection) {
     return collection == null || collection.isEmpty();
   }
-  
+
   public static Gender getGender(Process process) {
     Gender gender = (Gender)process.getParams().get(Param.gender);
     if(gender == null) {
@@ -91,14 +91,20 @@ public class Params {
     return years;
   }
 
+  public static List<Integer> getYearWindows(Process process) {
+    List<Integer> yearWindows = (List<Integer>)process.getParams().get(Param.yearWindows);
+    if(isNullOrEmpty(yearWindows)) {
+      yearWindows = new ArrayList<>();
+      yearWindows.add(1);
+      process.getParams().put(Param.yearWindows, yearWindows);
+    }
+    return yearWindows;
+  }
+
   public static List<List<Interval>> getYearWindowIntervals(Process process) {
     List<List<Interval>> yearWindowIntervals = (List<List<Interval>>)process.getParams().get(Param.yearWindowIntervals);
     if(isNullOrEmpty(yearWindowIntervals)) {
-      List<Integer> yearWindows = (List<Integer>)process.getParams().get(Param.yearWindows);
-      if(isNullOrEmpty(yearWindows)) {
-        yearWindows = new ArrayList<>();
-        yearWindows.add(1);
-      }
+      List<Integer> yearWindows = getYearWindows(process);
       List<Interval> yearIntervals = getYearIntervals(process);
       for(int iYearWindow : yearWindows) {
         List<Interval> iYearIntervals = new ArrayList<>();
@@ -115,6 +121,10 @@ public class Params {
       process.getParams().put(Param.yearWindowIntervals, yearWindowIntervals);
     }
     return yearWindowIntervals;
+  }
+
+  public static Integer getBenchmarkYear(Process process) {
+    return (Integer)process.getParams().get(Param.benchmarkYear);
   }
 
   public static List<Interval> getAgeIntervals(Process process) {
@@ -161,6 +171,17 @@ public class Params {
 
   public static List<TerritoryNode> getBenchmarkRangeNodes(Process process) {
     return (List<TerritoryNode>)process.getParams().get(Param.benchmarkRanges);
+  }
+
+  public static List<TerritoryNode> getAllRangeNodes(Process process) {
+    List<TerritoryNode> allRangeNodes = (List<TerritoryNode>)process.getParams().get(Param.allRanges);
+    if(isNullOrEmpty(allRangeNodes)) {
+      allRangeNodes = new ArrayList<>();
+      allRangeNodes.addAll(getBaseRangeNodes(process));
+      allRangeNodes.addAll(getBenchmarkRangeNodes(process));
+      process.getParams().put(Param.allRanges, allRangeNodes);
+    }
+    return allRangeNodes;
   }
 
   public static List<Territory> getSettlements(Process process) {
