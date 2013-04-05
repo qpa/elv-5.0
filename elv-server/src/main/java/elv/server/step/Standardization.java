@@ -11,19 +11,21 @@ import java.util.List;
  * Standardization.
  */
 public class Standardization extends AbstractStep {
+  private elv.common.params.Standardization standardizationMode;
+  private List<TerritoryNode> baseRangeNodes;
   private List<Interval> yearIntervals;
   private List<List<Interval>> yearWindowIntervals;
   private List<Integer> years;
-  private List<TerritoryNode> baseRangeNodes;
-  private elv.common.params.Standardization standardizationMode;
+  private List<Interval> ageIntervals;
 
   @Override
   public int initParams(Process process) {
+    baseRangeNodes = Params.getBaseRangeNodes(process);
     standardizationMode = Params.getStandardizationMode(process);
     yearIntervals = Params.getYearIntervals(process);
     yearWindowIntervals = Params.getYearWindowIntervals(process);
     years = Params.getYears(process);
-    baseRangeNodes = Params.getBaseRangeNodes(process);
+    ageIntervals = Params.getAgeIntervals(process);
     return;
   }
 
@@ -110,7 +112,7 @@ public class Standardization extends AbstractStep {
               int benchPopulationYear = 0;
               int benchCasesYear = 0;
 
-              for(elv.util.parameters.Interval iteratorAgeInterval : execution.getAgeIntervals()) {
+              for(Interval iAgeInterval : ageIntervals) {
                 double benchPopulationPeriodAgeInterval = 0;
                 int benchCasesPeriodAgeInterval = 0;
                 double populationPeriodAgeInterval = 0;
@@ -127,9 +129,9 @@ public class Standardization extends AbstractStep {
                 int observedCasesYearAgeInterval = 0;
 
                 for(elv.util.parameters.Settlement iteratorSettlement : execution.getAllSettlements()) {
-                  for(SettlementYearResult iteratorYearResult : iteratorSettlement.getYearResults()) {
+                  for(SettlementY8earResult iteratorYearResult : iteratorSettlement.getYearResults()) {
                     if(iteratorYearResult.year == benchYear) {
-                      if(iteratorYearResult.ageInterval.equals(iteratorAgeInterval)) {
+                      if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                         // Count district population and cases for this year and age-interval.
                         if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
                           && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
@@ -144,7 +146,7 @@ public class Standardization extends AbstractStep {
                       }
                     }
                     if(iYearInterval.getFromValue() <= iteratorYearResult.year && iteratorYearResult.year <= iYearInterval.getToValue()) {
-                      if(iteratorYearResult.ageInterval.equals(iteratorAgeInterval)) {
+                      if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                         // Count district cases for this year-interval and age-interval.
                         if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
                           && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
@@ -157,7 +159,7 @@ public class Standardization extends AbstractStep {
                       }
                     }
                     if(iteratorYearResult.year == meanYear || iteratorYearResult.year == (meanYear + meanYearCount - 1)) {
-                      if(iteratorYearResult.ageInterval.equals(iteratorAgeInterval)) {
+                      if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                         // Count district population for this year-interval and age-interval.
                         if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
                           && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
@@ -169,7 +171,7 @@ public class Standardization extends AbstractStep {
                         }
                       }
                     }
-                    if(iteratorYearResult.ageInterval.equals(iteratorAgeInterval)) {
+                    if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                       // Count district population and cases for this period and age-interval.
                       if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
                         && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
@@ -181,7 +183,7 @@ public class Standardization extends AbstractStep {
                       }
                     }
                     if(iteratorYearResult.year == meanYearPeriod || iteratorYearResult.year == (meanYearPeriod + meanYearCountPeriod - 1)) {
-                      if(iteratorYearResult.ageInterval.equals(iteratorAgeInterval)) {
+                      if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                         // Count district population for this district and age-interval.
                         if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
                           && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
@@ -257,13 +259,7 @@ public class Standardization extends AbstractStep {
                 yearsFileWriter.close();
                 iteratorDistrict.getYearResults().add(districtYearResult);
               }
-
-              // Return, if execution was stopped.
-              if(!execution.isExecuted()) {
-                return false;
-              }
               execution.getProgresses().peek().setValue(iteratorYear - iYearInterval.getFromValue() + 1);
-              java.lang.Thread.yield();
             }
             execution.getProgresses().pop();
             // Determine smr and incidence for year-interval.
