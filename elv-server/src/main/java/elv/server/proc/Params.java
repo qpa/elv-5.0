@@ -169,8 +169,8 @@ public class Params {
     return rangeNodes;
   }
 
-  public static List<TerritoryNode> getBenchmarkRangeNodes(Process process) {
-    return (List<TerritoryNode>)process.getParams().get(Param.benchmarkRanges);
+  public static TerritoryNode getBenchmarkRangeNode(Process process) {
+    return (TerritoryNode)process.getParams().get(Param.benchmarkRanges);
   }
 
   public static List<TerritoryNode> getAllRangeNodes(Process process) {
@@ -178,7 +178,7 @@ public class Params {
     if(isNullOrEmpty(allRangeNodes)) {
       allRangeNodes = new ArrayList<>();
       allRangeNodes.addAll(getBaseRangeNodes(process));
-      allRangeNodes.addAll(getBenchmarkRangeNodes(process));
+      allRangeNodes.add(getBenchmarkRangeNode(process));
       process.getParams().put(Param.allRanges, allRangeNodes);
     }
     return allRangeNodes;

@@ -16,8 +16,8 @@ import java.util.Map;
  */
 public class Standardization extends AbstractStep {
   private elv.common.params.Standardization standardizationMode;
-  private List<TerritoryNode> allRangeNodes;
-  private List<Interval> yearIntervals;
+  private List<TerritoryNode> baseRangeNodes;
+  private TerritoryNode benchmarkRangeNodes;
   private List<Integer> yearWindows;
   private List<List<Interval>> yearWindowIntervals;
   private List<Integer> years;
@@ -27,16 +27,16 @@ public class Standardization extends AbstractStep {
 
   @Override
   public int initParams(Process process) {
-    allRangeNodes = Params.getAllRangeNodes(process);
+    baseRangeNodes = Params.getBaseRangeNodes(process);
+    benchmarkRangeNodes = Params.getBenchmarkRangeNode(process);
     standardizationMode = Params.getStandardizationMode(process);
-    yearIntervals = Params.getYearIntervals(process);
     yearWindows = getYearWindows(process);
     yearWindowIntervals = Params.getYearWindowIntervals(process);
     years = Params.getYears(process);
     benchmarkYear = Params.getBenchmarkYear(process);
     ageIntervals = Params.getAgeIntervals(process);
     preparationResults = process.getResultDb().getHashMap(MortalityStandardPreparation.class.getSimpleName());
-    return;
+    return baseRangeNodes.size() * yearWindows.size() *;
   }
 
   @Override
@@ -46,73 +46,70 @@ public class Standardization extends AbstractStep {
     int periodMeanYear = benchmarkYear == null ? (fromYearPeriod + toYearPeriod) / 2 : benchmarkYear;
     int periodMeanYearCount = benchmarkYear == null && periodMeanYear - fromYearPeriod < toYearPeriod - periodMeanYear ? 2 : 1;
 
-    execution.getProgresses().push(new elv.util.Progress(elv.util.parameters.District.TITLE, 0, execution.getDistricts().size()));
-    for(TerritoryNode iRangeNode : allRangeNodes) {
+    int meanYearCount = 1;
+    int meanYear = benchmarkYear == null ? 0 : benchmarkYear;
+    int benchYear = benchmarkYear == null ? 0 : benchmarkYear;
+
+    for(TerritoryNode iRangeNode : baseRangeNodes) {
       Territory iRange = iRangeNode.territory;
-      double populationPeriod = 0;
-      int observedCasesPeriod = 0;
-      double expectedCasesPeriod = 0;
-      double benchPopulationPeriod = 0;
-      int benchCasesPeriod = 0;
+      double periodPopulation = 0;
+      int periodObservedCases = 0;
+      double periodExpectedCases = 0;
+      double periodBenchPopulation = 0;
+      int periodBenchCases = 0;
       int sumX = 0;
       double sumY = 0;
       int sumX2 = 0;
       double sumY2 = 0;
       double sumXY = 0;
 
-      execution.getProgresses().push(new elv.util.Progress(YEAR_WINDOWS_NAME, 0, yearWindowIntervals.size()));
       for(int yearWindowCount = 0; yearWindowCount < yearWindowIntervals.size(); yearWindowCount++) {
         int iteratorYearWindow = yearWindows.get(yearWindowCount);
 
         execution.getProgresses().push(new elv.util.Progress(elv.util.parameters.YearInterval.TITLE, 0, yearWindowIntervals.get(yearWindowCount).size()));
         for(Interval iYearInterval : yearWindowIntervals.get(yearWindowCount)) {
-          int meanYearCount = 1;
-          int meanYear = (iYearInterval.from + iYearInterval.to) / 2;
-          if(meanYear - iYearInterval.from < iYearInterval.to - meanYear) {
-            meanYearCount = 2;
+          if(benchmarkYear == null) {
+            meanYearCount = 1;
+            meanYear = (iYearInterval.from + iYearInterval.to) / 2;
+            if(meanYear - iYearInterval.from < iYearInterval.to - meanYear) {
+              meanYearCount = 2;
+            }
           }
 
-            double populationYearInterval = 0;
-            int observedCasesYearInterval = 0;
-            double expectedCasesYearInterval = 0;
-            double benchPopulationYearInterval = 0;
-            int benchCasesYearInterval = 0;
+          double yearIntervalPopulation = 0;
+          int yearIntervalObservedCases = 0;
+          double yearIntervalExpectedCases = 0;
+          double yearIntervalBenchPopulation = 0;
+          int yearIntervalBenchCases = 0;
 
-            execution.getProgresses().push(new elv.util.Progress(elv.util.parameters.YearInterval.YEARS_TITLE, 0, iYearInterval.getToValue() - iYearInterval.getFromValue() + 1));
-            for(int iYear = iYearInterval.from; iYear <= iYearInterval.to; iYear++) {
-              // Assigning the benchmark year to the standardization benchmark, if there is.
-              int benchYear;
-              if(benchmarkYear != null) {
-                benchYear = benchmarkYear;
-                meanYear = benchYear;
-                meanYearCount = 1;
-                periodMeanYear = benchYear;
-                periodMeanYearCount = 1;
-              } else {
-                benchYear = iYear;
-              }
+          execution.getProgresses().push(new elv.util.Progress(elv.util.parameters.YearInterval.YEARS_TITLE, 0, iYearInterval.getToValue() - iYearInterval.getFromValue() + 1));
+          for(int iYear = iYearInterval.from; iYear <= iYearInterval.to; iYear++) {
+            // Assigning the benchmark year to the standardization benchmark, if there is.
+            if(benchmarkYear == null) {
+              benchYear = iYear;
+            }
 
-              Key yearKey = new Key.Builder().setTerritory(iRange).setYear(iYear).build();
-              Value yearValue = results.get(yearKey);
-              if(yearValue == null) {
+            Key yearKey = new Key.Builder().setTerritory(iRange).setYear(iYear).build();
+            Value yearValue = results.get(yearKey);
+            if(yearValue == null) {
 
-              populationPeriod = 0;
-              observedCasesPeriod = 0;
-              expectedCasesPeriod = 0;
-              benchPopulationPeriod = 0;
-              benchCasesPeriod = 0;
+              periodPopulation = 0;
+              periodObservedCases = 0;
+              periodExpectedCases = 0;
+              periodBenchPopulation = 0;
+              periodBenchCases = 0;
 
-              populationYearInterval = 0;
-              observedCasesYearInterval = 0;
-              expectedCasesYearInterval = 0;
-              benchPopulationYearInterval = 0;
-              benchCasesYearInterval = 0;
+              yearIntervalPopulation = 0;
+              yearIntervalObservedCases = 0;
+              yearIntervalExpectedCases = 0;
+              yearIntervalBenchPopulation = 0;
+              yearIntervalBenchCases = 0;
 
-              int populationYear = 0;
-              int observedCasesYear = 0;
-              double expectedCasesYear = 0;
-              int benchPopulationYear = 0;
-              int benchCasesYear = 0;
+              int yearPopulation = 0;
+              int yearObservedCases = 0;
+              double yearExpectedCases = 0;
+              int yearBenchPopulation = 0;
+              int yearBenchCases = 0;
 
               for(Interval iAgeInterval : ageIntervals) {
                 double benchPopulationPeriodAgeInterval = 0;
@@ -131,7 +128,7 @@ public class Standardization extends AbstractStep {
                 int observedCasesYearAgeInterval = 0;
 
                 for(elv.util.parameters.Settlement iteratorSettlement : execution.getAllSettlements()) {
-                  for(SettlementY8earResult iteratorYearResult : iteratorSettlement.getYearResults()) {
+                  for(SettlementYearResult iteratorYearResult : iteratorSettlement.getYearResults()) {
                     if(iteratorYearResult.year == benchYear) {
                       if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                         // Count district population and cases for this year and age-interval.
@@ -200,47 +197,51 @@ public class Standardization extends AbstractStep {
                   }
                 }
 
-                benchPopulationYear += benchPopulationYearAgeInterval;
-                benchCasesYear += benchCasesYearAgeInterval;
-                benchPopulationYearInterval += benchPopulationYearIntervalAgeInterval;
-                benchCasesYearInterval += benchCasesYearIntervalAgeInterval;
-                benchPopulationPeriod += benchPopulationPeriodAgeInterval;
-                benchCasesPeriod += benchCasesPeriodAgeInterval;
+                Key yAIKey = new Key.Builder().setTerritory(iRange).setYear(iYear).setAgeInterval(iAgeInterval).build();
+                Value yAIValue = preparationResults.get(yAIKey);
+
+
+                yearBenchPopulation += benchPopulationYearAgeInterval;
+                yearBenchCases += benchCasesYearAgeInterval;
+                yearIntervalBenchPopulation += benchPopulationYearIntervalAgeInterval;
+                yearIntervalBenchCases += benchCasesYearIntervalAgeInterval;
+                periodBenchPopulation += benchPopulationPeriodAgeInterval;
+                periodBenchCases += benchCasesPeriodAgeInterval;
 
                 // Observed and expected.
-                populationYear += populationYearAgeInterval;
-                observedCasesYear += observedCasesYearAgeInterval;
-                populationYearInterval += populationYearIntervalAgeInterval;
-                observedCasesYearInterval += observedCasesYearIntervalAgeInterval;
-                populationPeriod += populationPeriodAgeInterval;
-                observedCasesPeriod += observedCasesPeriodAgeInterval;
+                yearPopulation += populationYearAgeInterval;
+                yearObservedCases += observedCasesYearAgeInterval;
+                yearIntervalPopulation += populationYearIntervalAgeInterval;
+                yearIntervalObservedCases += observedCasesYearIntervalAgeInterval;
+                periodPopulation += populationPeriodAgeInterval;
+                periodObservedCases += observedCasesPeriodAgeInterval;
                 if(standardizationMethod.equals(STANDARDIZATIONS[DIRECT])) {
-                  expectedCasesYear += (populationYearAgeInterval == 0 ? 0 : (double)observedCasesYearAgeInterval / populationYearAgeInterval * benchPopulationYearAgeInterval);
-                  expectedCasesYearInterval += (populationYearIntervalAgeInterval == 0 ? 0 : (double)observedCasesYearIntervalAgeInterval / populationYearIntervalAgeInterval * benchPopulationYearIntervalAgeInterval);
-                  expectedCasesPeriod += (populationPeriodAgeInterval == 0 ? 0 : (double)observedCasesPeriodAgeInterval / populationPeriodAgeInterval * benchPopulationPeriodAgeInterval);
+                  yearExpectedCases += (populationYearAgeInterval == 0 ? 0 : (double)observedCasesYearAgeInterval / populationYearAgeInterval * benchPopulationYearAgeInterval);
+                  yearIntervalExpectedCases += (populationYearIntervalAgeInterval == 0 ? 0 : (double)observedCasesYearIntervalAgeInterval / populationYearIntervalAgeInterval * benchPopulationYearIntervalAgeInterval);
+                  periodExpectedCases += (populationPeriodAgeInterval == 0 ? 0 : (double)observedCasesPeriodAgeInterval / populationPeriodAgeInterval * benchPopulationPeriodAgeInterval);
                 } else if(standardizationMethod.equals(STANDARDIZATIONS[INDIRECT])) {
-                  expectedCasesYear += (benchPopulationYearAgeInterval == 0 ? 0 : (double)benchCasesYearAgeInterval / benchPopulationYearAgeInterval * populationYearAgeInterval);
-                  expectedCasesYearInterval += (benchPopulationYearIntervalAgeInterval == 0 ? 0 : (double)benchCasesYearIntervalAgeInterval / benchPopulationYearIntervalAgeInterval * populationYearIntervalAgeInterval);
-                  expectedCasesPeriod += (benchPopulationPeriodAgeInterval == 0 ? 0 : (double)benchCasesPeriodAgeInterval / benchPopulationPeriodAgeInterval * populationPeriodAgeInterval);
+                  yearExpectedCases += (benchPopulationYearAgeInterval == 0 ? 0 : (double)benchCasesYearAgeInterval / benchPopulationYearAgeInterval * populationYearAgeInterval);
+                  yearIntervalExpectedCases += (benchPopulationYearIntervalAgeInterval == 0 ? 0 : (double)benchCasesYearIntervalAgeInterval / benchPopulationYearIntervalAgeInterval * populationYearIntervalAgeInterval);
+                  periodExpectedCases += (benchPopulationPeriodAgeInterval == 0 ? 0 : (double)benchCasesPeriodAgeInterval / benchPopulationPeriodAgeInterval * populationPeriodAgeInterval);
                 }
               }
               // Determine smr and incidence for year.
               double smrYear = 0;
               if(standardizationMethod.equals(STANDARDIZATIONS[DIRECT])) {
-                smrYear = (benchCasesYear == 0 ? 0 : expectedCasesYear / benchCasesYear);
-                expectedCasesYear = (smrYear == 0 ? 0 : observedCasesYear / smrYear);
+                smrYear = (yearBenchCases == 0 ? 0 : yearExpectedCases / yearBenchCases);
+                yearExpectedCases = (smrYear == 0 ? 0 : yearObservedCases / smrYear);
               } else if(standardizationMethod.equals(STANDARDIZATIONS[INDIRECT])) {
-                smrYear = (expectedCasesYear == 0 ? 0 : observedCasesYear / expectedCasesYear);
+                smrYear = (yearExpectedCases == 0 ? 0 : yearObservedCases / yearExpectedCases);
               }
-              double incidenceYear = (benchPopulationYear == 0 ? 0 : smrYear * benchCasesYear / benchPopulationYear * 1000);
+              double incidenceYear = (yearBenchPopulation == 0 ? 0 : smrYear * yearBenchCases / yearBenchPopulation * 1000);
 
               // Determine the significance, category and probability for year.
-              int smrSignificanceYear = signify(observedCasesYear, expectedCasesYear);
+              int smrSignificanceYear = signify(yearObservedCases, yearExpectedCases);
               int smrCategoryYear = categorize(smrYear, smrSignificanceYear);
-              double probabilityYear = computeProbability(signifyPoisson(observedCasesYear, expectedCasesYear), standardizationProbabilities);
+              double probabilityYear = computeProbability(signifyPoisson(yearObservedCases, yearExpectedCases), standardizationProbabilities);
               int probabilityCategoryYear = categorizeProbability(probabilityYear);
 
-              DistrictYearResult districtYearResult = new DistrictYearResult(iYear, populationYear, observedCasesYear, expectedCasesYear, incidenceYear, smrYear, smrSignificanceYear, smrCategoryYear, probabilityYear, probabilityCategoryYear);
+              DistrictYearResult districtYearResult = new DistrictYearResult(iYear, yearPopulation, yearObservedCases, yearExpectedCases, incidenceYear, smrYear, smrSignificanceYear, smrCategoryYear, probabilityYear, probabilityCategoryYear);
               if(!yearIsParsed) {
                 // Summarize.
                 sumX += iYear;
@@ -251,7 +252,7 @@ public class Standardization extends AbstractStep {
 
                 // Prepare line for year.
                 line = iYear + VS + iteratorDistrict.getCode() + VS
-                  + populationYear + VS + observedCasesYear + VS + elv.util.Util.toString(expectedCasesYear) + VS
+                  + yearPopulation + VS + yearObservedCases + VS + elv.util.Util.toString(yearExpectedCases) + VS
                   + elv.util.Util.toString(incidenceYear) + VS + elv.util.Util.toString(smrYear) + VS
                   + elv.util.Util.toString(smrSignificanceYear) + VS + smrCategoryYear + VS
                   + elv.util.Util.toString(probabilityYear) + VS + probabilityCategoryYear;
@@ -267,23 +268,23 @@ public class Standardization extends AbstractStep {
             // Determine smr and incidence for year-interval.
             double smrYearInterval = 0;
             if(standardizationMethod.equals(STANDARDIZATIONS[DIRECT])) {
-              smrYearInterval = (benchCasesYearInterval == 0 ? 0 : expectedCasesYearInterval / benchCasesYearInterval);
-              expectedCasesYearInterval = (smrYearInterval == 0 ? 0 : observedCasesYearInterval / smrYearInterval);
+              smrYearInterval = (yearIntervalBenchCases == 0 ? 0 : yearIntervalExpectedCases / yearIntervalBenchCases);
+              yearIntervalExpectedCases = (smrYearInterval == 0 ? 0 : yearIntervalObservedCases / smrYearInterval);
             } else if(standardizationMethod.equals(STANDARDIZATIONS[INDIRECT])) {
-              smrYearInterval = (expectedCasesYearInterval == 0 ? 0 : observedCasesYearInterval / expectedCasesYearInterval);
+              smrYearInterval = (yearIntervalExpectedCases == 0 ? 0 : yearIntervalObservedCases / yearIntervalExpectedCases);
             }
-            double incidenceYearInterval = (benchPopulationYearInterval == 0 ? 0 : smrYearInterval * benchCasesYearInterval / benchPopulationYearInterval * 1000);
+            double incidenceYearInterval = (yearIntervalBenchPopulation == 0 ? 0 : smrYearInterval * yearIntervalBenchCases / yearIntervalBenchPopulation * 1000);
             // Determine the significance, category and probability for year.
-            int smrSignificanceYearInterval = signify(observedCasesYearInterval, expectedCasesYearInterval);
+            int smrSignificanceYearInterval = signify(yearIntervalObservedCases, yearIntervalExpectedCases);
             int smrCategoryYearInterval = categorize(smrYearInterval, smrSignificanceYearInterval);
-            double probabilityYearInterval = computeProbability(signifyPoisson(observedCasesYearInterval, expectedCasesYearInterval), standardizationProbabilities);
+            double probabilityYearInterval = computeProbability(signifyPoisson(yearIntervalObservedCases, yearIntervalExpectedCases), standardizationProbabilities);
             int probabilityCategoryYearInterval = categorizeProbability(probabilityYearInterval);
 
-            iteratorDistrict.getWindowIntervalResults().add(new DistrictWindowIntervalResult(iteratorYearWindow, iYearInterval, (int)populationYearInterval, observedCasesYearInterval, expectedCasesYearInterval, incidenceYearInterval, smrYearInterval, smrSignificanceYearInterval, smrCategoryYearInterval, probabilityYearInterval, probabilityCategoryYearInterval));
+            iteratorDistrict.getWindowIntervalResults().add(new DistrictWindowIntervalResult(iteratorYearWindow, iYearInterval, (int)yearIntervalPopulation, yearIntervalObservedCases, yearIntervalExpectedCases, incidenceYearInterval, smrYearInterval, smrSignificanceYearInterval, smrCategoryYearInterval, probabilityYearInterval, probabilityCategoryYearInterval));
             // Prepare line for year-interval.
             line = iteratorYearWindow + VS + iYearInterval + VS + iteratorDistrict.getCode() + VS
-              + (int)populationYearInterval + VS + observedCasesYearInterval + VS
-              + elv.util.Util.toString(expectedCasesYearInterval) + VS + elv.util.Util.toString(incidenceYearInterval) + VS
+              + (int)yearIntervalPopulation + VS + yearIntervalObservedCases + VS
+              + elv.util.Util.toString(yearIntervalExpectedCases) + VS + elv.util.Util.toString(incidenceYearInterval) + VS
               + elv.util.Util.toString(smrYearInterval) + VS + elv.util.Util.toString(smrSignificanceYearInterval) + VS
               + smrCategoryYearInterval + VS + elv.util.Util.toString(probabilityYearInterval) + VS + probabilityCategoryYearInterval;
             // Store line for year-interval.
@@ -298,16 +299,16 @@ public class Standardization extends AbstractStep {
 
       double smrPeriod = 0;
       if(standardizationMethod.equals(STANDARDIZATIONS[DIRECT])) {
-        smrPeriod = (benchCasesPeriod == 0 ? 0 : expectedCasesPeriod / benchCasesPeriod);
-        expectedCasesPeriod = (smrPeriod == 0 ? 0 : observedCasesPeriod / smrPeriod);
+        smrPeriod = (periodBenchCases == 0 ? 0 : periodExpectedCases / periodBenchCases);
+        periodExpectedCases = (smrPeriod == 0 ? 0 : periodObservedCases / smrPeriod);
       } else if(standardizationMethod.equals(STANDARDIZATIONS[INDIRECT])) {
-        smrPeriod = (expectedCasesPeriod == 0 ? 0 : observedCasesPeriod / expectedCasesPeriod);
+        smrPeriod = (periodExpectedCases == 0 ? 0 : periodObservedCases / periodExpectedCases);
       }
-      double incidencePeriod = (benchPopulationPeriod == 0 ? 0 : smrPeriod * benchCasesPeriod / benchPopulationPeriod * 1000);
+      double incidencePeriod = (periodBenchPopulation == 0 ? 0 : smrPeriod * periodBenchCases / periodBenchPopulation * 1000);
       // Determine the significance, category and probability for year.
-      int smrSignificancePeriod = signify(observedCasesPeriod, expectedCasesPeriod);
+      int smrSignificancePeriod = signify(periodObservedCases, periodExpectedCases);
       int smrCategoryPeriod = categorize(smrPeriod, smrSignificancePeriod);
-      double probabilityPeriod = computeProbability(signifyPoisson(observedCasesPeriod, expectedCasesPeriod), standardizationProbabilities);
+      double probabilityPeriod = computeProbability(signifyPoisson(periodObservedCases, periodExpectedCases), standardizationProbabilities);
       int probabilityCategoryPeriod = categorizeProbability(probabilityPeriod);
       double sQx = (double)sumX2 - (double)sumX * sumX / execution.getYears().size();
       double sQy = sumY2 - sumY * sumY / execution.getYears().size();
@@ -316,12 +317,12 @@ public class Standardization extends AbstractStep {
       java.lang.String trendSignificancePeriod = signify(sQx, sQy, sP, execution.getYears(), trendSignificances);
       double trendCorrelationPeriod = (sQx == 0 || sQy == 0 ? 0 : java.lang.Math.abs(sP / java.lang.Math.sqrt(java.lang.Math.abs(sQx * sQy))));
       int trendCategoryPeriod = categorizeTrend(trendPeriod);
-      iteratorDistrict.setResult(new DistrictResult((int)populationPeriod, observedCasesPeriod, expectedCasesPeriod, incidencePeriod,
+      iteratorDistrict.setResult(new DistrictResult((int)periodPopulation, periodObservedCases, periodExpectedCases, incidencePeriod,
         smrPeriod, smrSignificancePeriod, smrCategoryPeriod, probabilityPeriod, probabilityCategoryPeriod, trendPeriod,
         trendSignificancePeriod, trendCorrelationPeriod, trendCategoryPeriod));
       // Prepare line for district.
-      line = iteratorDistrict.getCode() + VS + (int)populationPeriod + VS
-        + observedCasesPeriod + VS + elv.util.Util.toString(expectedCasesPeriod) + VS
+      line = iteratorDistrict.getCode() + VS + (int)periodPopulation + VS
+        + periodObservedCases + VS + elv.util.Util.toString(periodExpectedCases) + VS
         + elv.util.Util.toString(incidencePeriod) + VS + elv.util.Util.toString(smrPeriod) + VS
         + elv.util.Util.toString(smrSignificancePeriod) + VS + smrCategoryPeriod + VS
         + elv.util.Util.toString(probabilityPeriod) + VS + probabilityCategoryPeriod + VS
