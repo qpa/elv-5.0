@@ -17,7 +17,7 @@ import java.util.Map;
 public class Standardization extends AbstractStep {
   private elv.common.params.Standardization standardizationMode;
   private List<TerritoryNode> baseRangeNodes;
-  private TerritoryNode benchmarkRangeNodes;
+  private Territory benchmarkRange;
   private List<Integer> yearWindows;
   private List<List<Interval>> yearWindowIntervals;
   private List<Integer> years;
@@ -28,7 +28,7 @@ public class Standardization extends AbstractStep {
   @Override
   public int initParams(Process process) {
     baseRangeNodes = Params.getBaseRangeNodes(process);
-    benchmarkRangeNodes = Params.getBenchmarkRangeNode(process);
+    benchmarkRange = Params.getBenchmarkRangeNode(process).territory;
     standardizationMode = Params.getStandardizationMode(process);
     yearWindows = getYearWindows(process);
     yearWindowIntervals = Params.getYearWindowIntervals(process);
@@ -93,18 +93,6 @@ public class Standardization extends AbstractStep {
             Value yearValue = results.get(yearKey);
             if(yearValue == null) {
 
-              periodPopulation = 0;
-              periodObservedCases = 0;
-              periodExpectedCases = 0;
-              periodBenchPopulation = 0;
-              periodBenchCases = 0;
-
-              yearIntervalPopulation = 0;
-              yearIntervalObservedCases = 0;
-              yearIntervalExpectedCases = 0;
-              yearIntervalBenchPopulation = 0;
-              yearIntervalBenchCases = 0;
-
               int yearPopulation = 0;
               int yearObservedCases = 0;
               double yearExpectedCases = 0;
@@ -112,6 +100,15 @@ public class Standardization extends AbstractStep {
               int yearBenchCases = 0;
 
               for(Interval iAgeInterval : ageIntervals) {
+                Key yearAgeIKey = new Key.Builder().setTerritory(iRange).setYear(iYear).setAgeInterval(iAgeInterval).build();
+                Key benchYearAgeIKey = new Key.Builder().setTerritory(benchmarkRange).setYear(iYear).setAgeInterval(iAgeInterval).build();
+                
+                int populationYearAgeI = preparationResults.get(yearAgeIKey).population;
+                int observedCasesYearAgeI = preparationResults.get(yearAgeIKey).observedCases;
+                int benchPopulationYearAgeI = preparationResults.get(benchYearAgeIKey).population;
+                int benchCasesYearAgeInterval = preparationResults.get(benchYearAgeIKey).observedCases;
+                
+                
                 double benchPopulationPeriodAgeInterval = 0;
                 int benchCasesPeriodAgeInterval = 0;
                 double populationPeriodAgeInterval = 0;
@@ -122,11 +119,6 @@ public class Standardization extends AbstractStep {
                 double populationYearIntervalAgeInterval = 0;
                 int observedCasesYearIntervalAgeInterval = 0;
 
-                int benchPopulationYearAgeInterval = 0;
-                int benchCasesYearAgeInterval = 0;
-                int populationYearAgeInterval = 0;
-                int observedCasesYearAgeInterval = 0;
-
                 for(elv.util.parameters.Settlement iteratorSettlement : execution.getAllSettlements()) {
                   for(SettlementYearResult iteratorYearResult : iteratorSettlement.getYearResults()) {
                     if(iteratorYearResult.year == benchYear) {
@@ -134,12 +126,12 @@ public class Standardization extends AbstractStep {
                         // Count district population and cases for this year and age-interval.
                         if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
                           && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
-                          populationYearAgeInterval += iteratorYearResult.population;
-                          observedCasesYearAgeInterval += iteratorYearResult.analyzedCases;
+                          populationYearAgeI += iteratorYearResult.population;
+                          observedCasesYearAgeI += iteratorYearResult.analyzedCases;
                         }
                         // Count benchmark population and cases for this year and age-interval.
                         if(iteratorSettlement instanceof elv.util.parameters.BenchmarkSettlement) {
-                          benchPopulationYearAgeInterval += iteratorYearResult.population;
+                          benchPopulationYearAgeI += iteratorYearResult.population;
                           benchCasesYearAgeInterval += iteratorYearResult.analyzedCases;
                         }
                       }
@@ -197,11 +189,7 @@ public class Standardization extends AbstractStep {
                   }
                 }
 
-                Key yAIKey = new Key.Builder().setTerritory(iRange).setYear(iYear).setAgeInterval(iAgeInterval).build();
-                Value yAIValue = preparationResults.get(yAIKey);
-
-
-                yearBenchPopulation += benchPopulationYearAgeInterval;
+                yearBenchPopulation += benchPopulationYearAgeI;
                 yearBenchCases += benchCasesYearAgeInterval;
                 yearIntervalBenchPopulation += benchPopulationYearIntervalAgeInterval;
                 yearIntervalBenchCases += benchCasesYearIntervalAgeInterval;
@@ -209,18 +197,18 @@ public class Standardization extends AbstractStep {
                 periodBenchCases += benchCasesPeriodAgeInterval;
 
                 // Observed and expected.
-                yearPopulation += populationYearAgeInterval;
-                yearObservedCases += observedCasesYearAgeInterval;
+                yearPopulation += populationYearAgeI;
+                yearObservedCases += observedCasesYearAgeI;
                 yearIntervalPopulation += populationYearIntervalAgeInterval;
                 yearIntervalObservedCases += observedCasesYearIntervalAgeInterval;
                 periodPopulation += populationPeriodAgeInterval;
                 periodObservedCases += observedCasesPeriodAgeInterval;
                 if(standardizationMethod.equals(STANDARDIZATIONS[DIRECT])) {
-                  yearExpectedCases += (populationYearAgeInterval == 0 ? 0 : (double)observedCasesYearAgeInterval / populationYearAgeInterval * benchPopulationYearAgeInterval);
+                  yearExpectedCases += (populationYearAgeI == 0 ? 0 : (double)observedCasesYearAgeI / populationYearAgeI * benchPopulationYearAgeI);
                   yearIntervalExpectedCases += (populationYearIntervalAgeInterval == 0 ? 0 : (double)observedCasesYearIntervalAgeInterval / populationYearIntervalAgeInterval * benchPopulationYearIntervalAgeInterval);
                   periodExpectedCases += (populationPeriodAgeInterval == 0 ? 0 : (double)observedCasesPeriodAgeInterval / populationPeriodAgeInterval * benchPopulationPeriodAgeInterval);
                 } else if(standardizationMethod.equals(STANDARDIZATIONS[INDIRECT])) {
-                  yearExpectedCases += (benchPopulationYearAgeInterval == 0 ? 0 : (double)benchCasesYearAgeInterval / benchPopulationYearAgeInterval * populationYearAgeInterval);
+                  yearExpectedCases += (benchPopulationYearAgeI == 0 ? 0 : (double)benchCasesYearAgeInterval / benchPopulationYearAgeI * populationYearAgeI);
                   yearIntervalExpectedCases += (benchPopulationYearIntervalAgeInterval == 0 ? 0 : (double)benchCasesYearIntervalAgeInterval / benchPopulationYearIntervalAgeInterval * populationYearIntervalAgeInterval);
                   periodExpectedCases += (benchPopulationPeriodAgeInterval == 0 ? 0 : (double)benchCasesPeriodAgeInterval / benchPopulationPeriodAgeInterval * populationPeriodAgeInterval);
                 }
