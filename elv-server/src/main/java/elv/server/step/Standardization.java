@@ -102,40 +102,37 @@ public class Standardization extends AbstractStep {
               for(Interval iAgeInterval : ageIntervals) {
                 Key yearAgeIKey = new Key.Builder().setTerritory(iRange).setYear(iYear).setAgeInterval(iAgeInterval).build();
                 Key benchYearAgeIKey = new Key.Builder().setTerritory(benchmarkRange).setYear(iYear).setAgeInterval(iAgeInterval).build();
-                
+
                 int populationYearAgeI = preparationResults.get(yearAgeIKey).population;
                 int observedCasesYearAgeI = preparationResults.get(yearAgeIKey).observedCases;
                 int benchPopulationYearAgeI = preparationResults.get(benchYearAgeIKey).population;
                 int benchCasesYearAgeInterval = preparationResults.get(benchYearAgeIKey).observedCases;
-                
-                
+
+                Key yearIAgeIKey = new Key.Builder().setTerritory(iRange).setYearInterval(iYearInterval).setAgeInterval(iAgeInterval).build();
+                Key benchYearIAgeIKey = new Key.Builder().setTerritory(benchmarkRange).setYearInterval(iYearInterval).setAgeInterval(iAgeInterval).build();
+                Key meanYearAgeIKey = new Key.Builder().setTerritory(iRange).setYear(meanYear).setAgeInterval(iAgeInterval).build();
+                Key benchMeanYearAgeIKey = new Key.Builder().setTerritory(benchmarkRange).setYear(meanYear).setAgeInterval(iAgeInterval).build();
+
+                double populationYearIntervalAgeInterval = preparationResults.get(meanYearAgeIKey).population;
+                if(meanYearCount == 2) {
+                  meanYearAgeIKey = new Key.Builder().setTerritory(iRange).setYear(meanYear + 1).setAgeInterval(iAgeInterval).build();
+                  populationYearIntervalAgeInterval = (populationYearIntervalAgeInterval + preparationResults.get(meanYearAgeIKey).population) / 2;
+                }
+                double benchPopulationYearIntervalAgeInterval = preparationResults.get(benchMeanYearAgeIKey).population;
+                if(meanYearCount == 2) {
+                  benchMeanYearAgeIKey = new Key.Builder().setTerritory(benchmarkRange).setYear(meanYear + 1).setAgeInterval(iAgeInterval).build();
+                  benchPopulationYearIntervalAgeInterval = (benchPopulationYearIntervalAgeInterval + preparationResults.get(benchMeanYearAgeIKey).population) / 2;
+                }
+                int observedCasesYearIntervalAgeInterval = 0;
+                int benchCasesYearIntervalAgeInterval = 0;
+
                 double benchPopulationPeriodAgeInterval = 0;
                 int benchCasesPeriodAgeInterval = 0;
                 double populationPeriodAgeInterval = 0;
                 int observedCasesPeriodAgeInterval = 0;
 
-                double benchPopulationYearIntervalAgeInterval = 0;
-                int benchCasesYearIntervalAgeInterval = 0;
-                double populationYearIntervalAgeInterval = 0;
-                int observedCasesYearIntervalAgeInterval = 0;
-
                 for(elv.util.parameters.Settlement iteratorSettlement : execution.getAllSettlements()) {
                   for(SettlementYearResult iteratorYearResult : iteratorSettlement.getYearResults()) {
-                    if(iteratorYearResult.year == benchYear) {
-                      if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
-                        // Count district population and cases for this year and age-interval.
-                        if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
-                          && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
-                          populationYearAgeI += iteratorYearResult.population;
-                          observedCasesYearAgeI += iteratorYearResult.analyzedCases;
-                        }
-                        // Count benchmark population and cases for this year and age-interval.
-                        if(iteratorSettlement instanceof elv.util.parameters.BenchmarkSettlement) {
-                          benchPopulationYearAgeI += iteratorYearResult.population;
-                          benchCasesYearAgeInterval += iteratorYearResult.analyzedCases;
-                        }
-                      }
-                    }
                     if(iYearInterval.getFromValue() <= iteratorYearResult.year && iteratorYearResult.year <= iYearInterval.getToValue()) {
                       if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
                         // Count district cases for this year-interval and age-interval.
@@ -146,19 +143,6 @@ public class Standardization extends AbstractStep {
                         // Count benchmark cases for this year-interval and age-interval.
                         if(iteratorSettlement instanceof elv.util.parameters.BenchmarkSettlement) {
                           benchCasesYearIntervalAgeInterval += iteratorYearResult.analyzedCases;
-                        }
-                      }
-                    }
-                    if(iteratorYearResult.year == meanYear || iteratorYearResult.year == (meanYear + meanYearCount - 1)) {
-                      if(iteratorYearResult.ageInterval.equals(iAgeInterval)) {
-                        // Count district population for this year-interval and age-interval.
-                        if(iteratorSettlement.getDistrictCode() == iteratorDistrict.getCode()
-                          && iteratorSettlement.getAggregation().equals(iteratorDistrict.getAggregation())) {
-                          populationYearIntervalAgeInterval += (double)iteratorYearResult.population / meanYearCount;
-                        }
-                        // Count benchmark population for this year-interval and age-interval.
-                        if(iteratorSettlement instanceof elv.util.parameters.BenchmarkSettlement) {
-                          benchPopulationYearIntervalAgeInterval += (double)iteratorYearResult.population / meanYearCount;
                         }
                       }
                     }

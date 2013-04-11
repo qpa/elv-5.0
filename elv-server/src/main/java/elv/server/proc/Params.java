@@ -189,9 +189,9 @@ public class Params {
     if(isNullOrEmpty(settlements)) {
       final Set<Territory> settlementSet = new TreeSet<>();
       addSettlements(getBaseRangeNodes(process), settlementSet);
-      List<TerritoryNode> benchmarkRanges = getBenchmarkRangeNodes(process);
-      if(benchmarkRanges != null) {
-        addSettlements(benchmarkRanges, settlementSet);
+      TerritoryNode benchmarkRange = getBenchmarkRangeNode(process);
+      if(benchmarkRange != null) {
+        settlementSet.add(benchmarkRange.territory);
       }
       settlements = new ArrayList<>(settlementSet);
       process.getParams().put(Param.settlements, settlements);
