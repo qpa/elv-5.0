@@ -23,7 +23,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
 /**
- * Mortality preparation.
+ * Population preparation.
  */
 public class PopulationPreparation extends AbstractStep {
   private List<Gender> genders;
