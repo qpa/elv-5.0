@@ -30,7 +30,6 @@ public class MortalityStandardPreparationTest {
     Analysis analysis = new Analysis.MortalityStandardization(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
     Attribute analysisAttribute = new Attribute(null);
     Process process = new Process(analysis, analysisAttribute);
-    process.getResults();
 
     List<Gender> genders = new ArrayList<>();
     genders.add(Gender.MALES);
@@ -69,7 +68,6 @@ public class MortalityStandardPreparationTest {
 
     String stepName = MortalityStandardPreparation.class.getSimpleName();
     Map<Key, Value> stepResult = process.getResultDb().getHashMap(stepName);
-    process.getResults().put(stepName, stepResult);
 
     new MortalityStandardPreparation().compute(process);
   }

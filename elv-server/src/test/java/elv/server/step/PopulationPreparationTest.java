@@ -29,7 +29,6 @@ public class PopulationPreparationTest {
     Analysis analysis = new Analysis.PopulationPreparation(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
     Attribute analysisAttribute = new Attribute(null);
     Process process = new Process(analysis, analysisAttribute);
-    process.getResults();
 
     List<Gender> genders = new ArrayList<>();
     genders.add(Gender.MALES);
@@ -58,7 +57,6 @@ public class PopulationPreparationTest {
 
     String stepName = PopulationPreparation.class.getSimpleName();
     Map<Key, Value> stepResult = process.getResultDb().getHashMap(stepName);
-    process.getResults().put(stepName, stepResult);
 
     new PopulationPreparation().compute(process);
   }

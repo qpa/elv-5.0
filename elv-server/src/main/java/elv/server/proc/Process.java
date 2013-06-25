@@ -62,13 +62,6 @@ public final class Process implements Runnable {
     return steps;
   }
 
-  public Map<String, Map<Key, Value>> getResults() {
-    if(results == null) {
-      results = new HashMap<>();
-    }
-    return results;
-  }
-
   public DB getResultDb() {
     if(resultDb == null) {
       resultDb = DBMaker.newFileDB(new File(analysis.getProcTrack().get())).closeOnJvmShutdown().compressionEnable().make();
@@ -93,7 +86,6 @@ public final class Process implements Runnable {
       Files.store(analysisAttribute, analysis.getAttributeTrack());
 
       getParams();
-      getResults();
 
       steps = loadSteps();
       for(Step step : steps) {
