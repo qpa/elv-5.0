@@ -7,13 +7,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Historical attributes.
+ * Attributes with history.
  */
-public class Attribute {
+public class Attributes {
   protected final History history = new History();
   private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
-  public Attribute(Map<String, Object> startAttributes) {
+  public Attributes(Map<String, Object> startAttributes) {
     if(startAttributes != null) {
       attributes.putAll(startAttributes);
     }

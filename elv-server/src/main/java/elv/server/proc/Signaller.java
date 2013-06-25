@@ -2,7 +2,7 @@ package elv.server.proc;
 
 import elv.common.Analysis;
 import elv.common.App;
-import elv.common.Attribute;
+import elv.common.Attributes;
 import elv.common.io.Tracks;
 import elv.server.WebSocketHandler;
 import java.io.IOException;
@@ -76,7 +76,7 @@ public class Signaller {
   private void scheduleAnalysis(Path path) {
     try {
       if(Files.isRegularFile(path, NOFOLLOW_LINKS) && Tracks.file(Analysis.class).equals(path.getFileName().toString())) {
-        final Attribute analysisAttribute = elv.server.io.Files.load(Attribute.class, Tracks.create(path));
+        final Attributes analysisAttribute = elv.server.io.Files.load(Attributes.class, Tracks.create(path));
         if(analysisAttribute.get(Analysis.Attribute.SCHEDULED_DATE.name()) != null) {
           final String analysisClassName = (String)analysisAttribute.get(Analysis.Attribute.TYPE.name());
           final Analysis analysis = (Analysis)Class.forName(analysisClassName).getConstructor(String.class).newInstance(Tracks.create(path.getParent()));

@@ -2,7 +2,7 @@ package elv.server.proc;
 
 import elv.common.Analysis;
 import elv.common.App;
-import elv.common.Attribute;
+import elv.common.Attributes;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class Processes {
     scheduler.setRemoveOnCancelPolicy(true);
   }
   
-  public void push(Analysis analysis, Attribute analysisAttribute) {
+  public void push(Analysis analysis, Attributes analysisAttribute) {
     Date scheduled = (Date)analysisAttribute.get(Analysis.Attribute.SCHEDULED_DATE.name());
     if(scheduled != null && processes.get(analysis) == null) {
       final long delay = scheduled.getTime() - new Date().getTime();

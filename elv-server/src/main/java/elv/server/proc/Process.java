@@ -3,7 +3,7 @@ package elv.server.proc;
 import elv.server.step.Step;
 import com.google.common.collect.ImmutableList;
 import elv.common.Analysis;
-import elv.common.Attribute;
+import elv.common.Attributes;
 import elv.common.io.Tracks;
 import elv.common.params.Param;
 import elv.common.step.Progress;
@@ -30,14 +30,13 @@ public final class Process implements Runnable {
   public static final DataSource DATA_DB = Config.dataBase(null);//Config.app());
   public static final ForkJoinPool EXECUTOR = new ForkJoinPool();
   private Analysis analysis;
-  private Attribute analysisAttribute;
+  private Attributes analysisAttribute;
   private DB resultDb;
   private Map<Param, Object> params;
   private List<Step> steps;
-  private Map<String, Map<Key, Value>> results;
   private Progress progress;
 
-  public Process(Analysis analysis, Attribute analysisAttribute) {
+  public Process(Analysis analysis, Attributes analysisAttribute) {
     this.analysis = analysis;
     this.analysisAttribute = analysisAttribute;
   }
@@ -46,7 +45,7 @@ public final class Process implements Runnable {
     return analysis;
   }
 
-  public Attribute getAnalysisAttribute() {
+  public Attributes getAnalysisAttribute() {
     return analysisAttribute;
   }
 

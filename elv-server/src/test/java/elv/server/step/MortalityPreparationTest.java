@@ -1,7 +1,7 @@
 package elv.server.step;
 
 import elv.common.Analysis;
-import elv.common.Attribute;
+import elv.common.Attributes;
 import elv.common.io.Tracks;
 import elv.common.params.Diagnosis;
 import elv.common.params.Gender;
@@ -29,7 +29,7 @@ public class MortalityPreparationTest {
   @Test
   public void testCompute() throws IOException {
     Analysis analysis = new Analysis.MortalityPreparation(Tracks.create(System.getProperty("user.home") + "/.elv/5.0/lofi"));
-    Attribute analysisAttribute = new Attribute(null);
+    Attributes analysisAttribute = new Attributes(null);
     Process process = new Process(analysis, analysisAttribute);
 
     List<Gender> genders = new ArrayList<>();

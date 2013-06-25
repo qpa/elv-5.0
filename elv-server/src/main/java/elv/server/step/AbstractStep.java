@@ -6,7 +6,7 @@ import elv.server.result.Value;
 import java.util.Map;
 
 /**
- * Convenience Step. All Steps must extend this class, instead of implementing Step.
+ * General Step. All Steps must extend this class, instead of implementing Step.
  */
 public abstract class AbstractStep implements Step {
   public static final String POPULATION_SQL = "SELECT SUM(population) FROM population WHERE ";
@@ -16,7 +16,6 @@ public abstract class AbstractStep implements Step {
 
   private void initResults(Process process) {
     results = process.getResultDb().getHashMap(name);
-    process.getResults().put(name, results);
   }
 
   @Override
